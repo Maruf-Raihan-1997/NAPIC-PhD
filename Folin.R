@@ -67,7 +67,7 @@ p <- ggplot(df_bar, aes(x = Sample, y = Mean, fill = Sample)) +
   theme(
     legend.position = "right",
     legend.box = "vertical",
-    plot.title = element_text(size = 18, face = "bold", hjust = 0.5),   # <-- TITLE FIXED
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),   # <-- TITLE FIXED
     axis.text.x = element_text(angle = 0, hjust = 0.5, vjust = 0.5,
                                size = 14, face = "bold"),
     axis.text.y = element_text(size = 14, face = "bold"),
@@ -78,7 +78,7 @@ p <- ggplot(df_bar, aes(x = Sample, y = Mean, fill = Sample)) +
   ) +
   labs(
     title = "In Vitro Digestion Increased the Total Phenolic Content of Duckweed",
-    x = "Sample Type",
+    x = "Food Vehicle",
     y = "TPC (mg GAE/g dry weight)"
   )
 
