@@ -1,27 +1,62 @@
-# -----------------------------
-# Apparent Protein Digestibility Data
-# -----------------------------
-df_protein <- data.frame(
-  Sample = c("DW-Water", "DW-Banana", "DW-Bread"),
-  Mean   = c(28.90, 42.19, 80.95),
-  SD     = c(4.36, 8.77, 4.42),
-  CV     = c(15.10, 20.78, 5.46),
-  Tukey  = c("b", "c", "d")   # <-- YOUR REQUEST
+library(ggplot2)
+library(emmeans)
+
+# ---------------------------------------------------------
+# 1. RAW OPA DATA
+# ---------------------------------------------------------
+df_raw <- data.frame(
+  Sample = factor(rep(c("DW-Water", "DW-Banana", "DW-Bread"), each = 3),
+                  levels = c("DW-Water", "DW-Banana", "DW-Bread")),
+  Value = c(
+    28.36, 24.83, 33.51,   # DW-Water
+    32.78, 43.67, 50.13,   # DW-Banana
+    76.13, 84.81, 81.92    # DW-Bread
+  )
 )
 
-df_protein$Sample <- factor(df_protein$Sample,
-                            levels = c("DW-Water", "DW-Banana", "DW-Bread"))
+# ---------------------------------------------------------
+# 2. DESCRIPTIVE STATS (auto)
+# ---------------------------------------------------------
+df_stats <- aggregate(Value ~ Sample, df_raw, function(x) {
+  c(Mean = mean(x), SD = sd(x), CV = sd(x)/mean(x)*100)
+})
 
-library(ggplot2)
+df_stats <- do.call(data.frame, df_stats)
+names(df_stats) <- c("Sample", "Mean", "SD", "CV")
 
-# -----------------------------
-# Base Plot
-# -----------------------------
-p_protein <- ggplot(df_protein, aes(x = Sample, y = Mean, fill = Sample)) +
+# ---------------------------------------------------------
+# 3. ANOVA + TUKEY (only p-values)
+# ---------------------------------------------------------
+model <- aov(Value ~ Sample, data = df_raw)
+emm <- emmeans(model, ~ Sample)
+tukey <- summary(pairs(emm, adjust = "tukey"))
+
+# Extract p-values
+p_WB  <- tukey$p.value[1]   # Water vs Banana
+p_WBr <- tukey$p.value[2]   # Water vs Bread
+p_BBr <- tukey$p.value[3]   # Banana vs Bread
+
+# ---------------------------------------------------------
+# 4. Convert p-values → asterisks
+# ---------------------------------------------------------
+p_to_star <- function(p) {
+  if (p < 0.0001) return("****")
+  if (p < 0.01)    return("**")
+  if (p < 0.05)    return("*")
+  return("ns")
+}
+
+star_WB  <- p_to_star(p_WB)
+star_WBr <- p_to_star(p_WBr)
+star_BBr <- p_to_star(p_BBr)
+
+# ---------------------------------------------------------
+# 5. BASE PLOT (no Tukey letters)
+# ---------------------------------------------------------
+p_opa <- ggplot(df_stats, aes(x = Sample, y = Mean, fill = Sample)) +
   geom_col(width = 0.7) +
   geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD),
                 width = 0.2, linewidth = 1) +
-  geom_text(aes(label = Tukey, y = Mean + SD + 5), size = 7) +
   
   scale_fill_manual(
     values = c("DW-Water" = "steelblue",
@@ -30,23 +65,11 @@ p_protein <- ggplot(df_protein, aes(x = Sample, y = Mean, fill = Sample)) +
     name = "Sample Legend"
   ) +
   
-  geom_point(aes(shape = Tukey), alpha = 0) +
-  scale_shape_manual(
-    name = "Tukey Groups",
-    values = c("b" = 16, "c" = 16, "d" = 16),
-    labels = c("b = DW-Water",
-               "c = DW-Banana",
-               "d = DW-Bread")
-  ) +
-  
   theme_bw(base_size = 14) +
   theme(
     legend.position = "right",
     legend.box = "vertical",
-    
-    # ⭐ Title ABOVE panel (journal style)
     plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
-    
     axis.text.x = element_text(size = 14, face = "bold"),
     axis.text.y = element_text(size = 14, face = "bold"),
     axis.title.x = element_text(size = 16, face = "bold"),
@@ -55,26 +78,37 @@ p_protein <- ggplot(df_protein, aes(x = Sample, y = Mean, fill = Sample)) +
     axis.ticks = element_line(colour = "black", linewidth = 1.2)
   ) +
   labs(
-    title = "Apparent Protein Digestibility of Duckweed in Different Food Matrices",
+    title = "OPA-Measured Protein Hydrolysis of Duckweed in Different Food Matrices",
     x = "Food Vehicle",
-    y = "Apparent Protein Digestibility (%)"
+    y = "OPA Value (µmol Serine Equiv./g)"
   )
 
-# -----------------------------
-# Asterisks + comparison brackets
-# -----------------------------
-p_protein <- p_protein +
+# ---------------------------------------------------------
+# 6. AUTOMATED BRACKETS BASED ON ANOVA OUTPUT
+# ---------------------------------------------------------
+
+# Water vs Banana
+p_opa <- p_opa +
   annotate("segment", x = 1, xend = 2, y = 95, yend = 95, linewidth = 0.8) +
-  annotate("text", x = 1.5, y = 100, label = "**", size = 7) +
+  annotate("text", x = 1.5, y = 100, label = star_WB, size = 7)
+
+# Banana vs Bread
+p_opa <- p_opa +
   annotate("segment", x = 2, xend = 3, y = 105, yend = 105, linewidth = 0.8) +
-  annotate("text", x = 2.5, y = 110, label = "****", size = 7)
+  annotate("text", x = 2.5, y = 110, label = star_BBr, size = 7)
 
-# -----------------------------
-# Significance legend inside plot
-# -----------------------------
-p_protein <- p_protein +
-  annotate("text", x = 1, y = 120,
-           label = "** p < 0.01   |   **** p < 0.0001",
-           hjust = 0, size = 5)
+# Water vs Bread
+p_opa <- p_opa +
+  annotate("segment", x = 1, xend = 3, y = 120, yend = 120, linewidth = 0.8) +
+  annotate("text", x = 2, y = 125, label = star_WBr, size = 7)
 
-print(p_protein)
+print(p_opa)
+
+cat("\n=== DESCRIPTIVE STATS ===\n")
+print(df_stats)
+
+cat("\n=== ANOVA SUMMARY ===\n")
+print(summary(model))
+
+cat("\n=== TUKEY POST-HOC ===\n")
+print(tukey)

@@ -77,3 +77,12 @@ p_bradford <- p_bradford +
 # 7. PRINT
 # ---------------------------------------------------------
 print(p_bradford)
+
+cat("\n=== DESCRIPTIVE STATS ===\n")
+print(df_stats)
+
+cat("\n=== ANOVA SUMMARY ===\n")
+print(summary(model))
+
+cat("\n=== TUKEY POST-HOC ===\n")
+print(tukey)

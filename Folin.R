@@ -25,11 +25,8 @@ tukey <- TukeyHSD(anova_result)
 pvals <- tukey$group[, "p adj"]
 names(pvals) <- rownames(tukey$group)
 
-# Tukey letters
-letters <- multcompLetters(pvals)$Letters
-
 # -----------------------------
-# Summary table (means + SD + letters)
+# Summary table (means + SD)
 # -----------------------------
 df_summary <- df %>%
   group_by(group) %>%
@@ -37,8 +34,7 @@ df_summary <- df %>%
     Mean = mean(TPC),
     SD   = sd(TPC),
     .groups = "drop"
-  ) %>%
-  mutate(letter = letters[group])
+  )
 
 df_summary$Sample <- factor(df_summary$group,
                             levels = c("Undigested", "DW_Water", "DW_Banana", "DW_Bread"))
@@ -71,12 +67,21 @@ comparisons <- comparisons %>%
   )
 
 # -----------------------------
-# REMOVE ONLY the two pairs you specified
-# -----------------------------
+# REMOVE ONLY:
+# Undigested – DW_Banana
+# Undigested – DW_Bread
+# DW_Water – DW_Bread
+
+remove_comps <- c(
+  "Undigested-DW_Banana",
+  "DW_Banana-Undigested",
+  "DW_Water-DW_Bread",
+  "DW_Bread-DW_Water",
+  "Undigested-DW_Bread"
+)
+
 comparisons <- comparisons %>%
-  filter(!(g1 == "Undigested" & g2 == "DW_Banana")) %>%   # remove Undigested–DW_Banana
-  filter(!(g1 == "DW_Water" & g2 == "DW_Bread")) %>%      # remove DW_Water–DW_Bread
-  filter(!(g1 == "DW_Bread" & g2 == "DW_Water"))          # remove reversed order too
+  filter(!(comp %in% remove_comps))
 
 # -----------------------------
 # Assign bracket height automatically
@@ -91,7 +96,6 @@ p <- ggplot(df_summary, aes(x = Sample, y = Mean, fill = Sample)) +
   geom_col(width = 0.7) +
   geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD),
                 width = 0.2, linewidth = 1) +
-  geom_text(aes(label = letter, y = Mean + SD + 10), size = 7) +
   
   scale_fill_manual(
     values = c("Undigested" = "darkgreen",
@@ -119,7 +123,7 @@ p <- ggplot(df_summary, aes(x = Sample, y = Mean, fill = Sample)) +
   )
 
 # -----------------------------
-# Add automatic brackets + asterisks (except removed pairs)
+# Add automatic brackets + asterisks
 # -----------------------------
 for (i in 1:nrow(comparisons)) {
   g1 <- comparisons$g1[i]
@@ -136,3 +140,18 @@ for (i in 1:nrow(comparisons)) {
 }
 
 print(p)
+
+# -----------------------------
+# Console output
+# -----------------------------
+cat("\n=== DESCRIPTIVE STATS ===\n")
+print(df_summary)
+
+cat("\n=== ANOVA SUMMARY ===\n")
+print(summary(anova_result))
+
+cat("\n=== TUKEY POST-HOC ===\n")
+print(tukey)
+
+cat("\n=== SIGNIFICANCE STARS USED IN PLOT ===\n")
+print(comparisons[, c("comp", "p", "stars")])
