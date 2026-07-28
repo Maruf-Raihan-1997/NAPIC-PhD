@@ -6,7 +6,7 @@ df_bradford <- data.frame(
   Mean   = c(604.19, 429.80, 459.57),
   SD     = c(118.63, 25.33, 18.17),
   CV     = c(19.64, 5.89, 3.95),
-  Tukey  = c("b", "c", "d")   # <-- YOUR REQUEST
+  Tukey  = c("b", "c", "d")
 )
 
 df_bradford$Sample <- factor(df_bradford$Sample,
@@ -30,23 +30,11 @@ p_bradford <- ggplot(df_bradford, aes(x = Sample, y = Mean, fill = Sample)) +
     name = "Sample Legend"
   ) +
   
-  geom_point(aes(shape = Tukey), alpha = 0) +
-  scale_shape_manual(
-    name = "Tukey Groups",
-    values = c("b" = 16, "c" = 16, "d" = 16),
-    labels = c("b = DW-Water",
-               "c = DW-Banana",
-               "d = DW-Bread")
-  ) +
-  
   theme_bw(base_size = 14) +
   theme(
     legend.position = "right",
     legend.box = "vertical",
-    
-    # ⭐ Title ABOVE panel (journal style)
     plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
-    
     axis.text.x = element_text(size = 14, face = "bold"),
     axis.text.y = element_text(size = 14, face = "bold"),
     axis.title.x = element_text(size = 16, face = "bold"),
