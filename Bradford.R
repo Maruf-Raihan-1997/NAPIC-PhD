@@ -1,68 +1,79 @@
-# -----------------------------
-# Bradford Protein Concentration Data
-# -----------------------------
-df_bradford <- data.frame(
-  Sample = c("DW-Water", "DW-Banana", "DW-Bread"),
-  Mean   = c(604.19, 429.80, 459.57),
-  SD     = c(118.63, 25.33, 18.17),
-  CV     = c(19.64, 5.89, 3.95),
-  Tukey  = c("b", "c", "d")
-)
+#This Code is made by Maruf Raihan for bradford data statistical analysis and visual presentation
 
-df_bradford$Sample <- factor(df_bradford$Sample,
-                             levels = c("DW-Water", "DW-Banana", "DW-Bread"))
-
+library(emmeans)
+library(multcomp)
+library(multcompView)
 library(ggplot2)
 
-# -----------------------------
-# Base Bradford Plot
-# -----------------------------
-p_bradford <- ggplot(df_bradford, aes(x = Sample, y = Mean, fill = Sample)) +
+# ---------------------------------------------------------
+# 1. RAW DATA
+# ---------------------------------------------------------
+df <- data.frame(
+  Sample = factor(rep(c("DW-Water", "DW-Banana", "DW-Bread"), each = 3),
+                  levels = c("DW-Water", "DW-Banana", "DW-Bread")),
+  Protein = c(
+    639.00, 472.04, 701.52,   # DW-Water
+    400.72, 441.69, 447.00,   # DW-Banana
+    448.05, 480.52, 450.14    # DW-Bread
+  )
+)
+
+# ---------------------------------------------------------
+# 2. DESCRIPTIVE STATS
+# ---------------------------------------------------------
+df_stats <- aggregate(Protein ~ Sample, df, function(x) {
+  c(Mean = mean(x), SD = sd(x), CV = sd(x)/mean(x)*100)
+})
+
+df_stats <- do.call(data.frame, df_stats)
+names(df_stats) <- c("Sample", "Mean", "SD", "CV")
+
+# ---------------------------------------------------------
+# 3. ANOVA + TUKEY
+# ---------------------------------------------------------
+model <- aov(Protein ~ Sample, data = df)
+emm <- emmeans(model, ~ Sample)
+tukey <- summary(pairs(emm, adjust = "tukey"))
+
+# ---------------------------------------------------------
+# 4. Tukey LETTERS
+# ---------------------------------------------------------
+cld_out <- suppressMessages(
+  cld(emm, Letters = letters, adjust = "tukey")
+)
+
+df_plot <- merge(df_stats, cld_out[, c("Sample", ".group")], by = "Sample")
+
+# ---------------------------------------------------------
+# 5. BASE PLOT
+# ---------------------------------------------------------
+p_bradford <- ggplot(df_plot, aes(x = Sample, y = Mean, fill = Sample)) +
   geom_col(width = 0.7) +
   geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD),
                 width = 0.2, linewidth = 1) +
-  geom_text(aes(label = Tukey, y = Mean + SD + 30), size = 7) +
+  geom_text(aes(label = .group, y = Mean + SD + 30), size = 7) +
   
   scale_fill_manual(
     values = c("DW-Water" = "steelblue",
                "DW-Banana" = "forestgreen",
-               "DW-Bread" = "saddlebrown"),
-    name = "Sample Legend"
+               "DW-Bread" = "saddlebrown")
   ) +
   
   theme_bw(base_size = 14) +
-  theme(
-    legend.position = "right",
-    legend.box = "vertical",
-    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
-    axis.text.x = element_text(size = 14, face = "bold"),
-    axis.text.y = element_text(size = 14, face = "bold"),
-    axis.title.x = element_text(size = 16, face = "bold"),
-    axis.title.y = element_text(size = 16, face = "bold"),
-    axis.line = element_line(colour = "black", linewidth = 1.2),
-    axis.ticks = element_line(colour = "black", linewidth = 1.2)
-  ) +
   labs(
-    title = "Protein Concentration of Duckweed After In Vitro Digestion in Different Food Matrices",
+    title = "Protein Concentration of Duckweed After In Vitro Digestion",
     x = "Food Vehicle",
     y = "Protein Concentration (µg/mL)"
   )
 
-# -----------------------------
-# Asterisks + comparison brackets
-# -----------------------------
+# ---------------------------------------------------------
+# 6. SINGLE ANOVA BRACKET ACROSS ALL THREE BARS
+# ---------------------------------------------------------
 p_bradford <- p_bradford +
-  annotate("segment", x = 1, xend = 2, y = 800, yend = 800, linewidth = 0.8) +
-  annotate("text", x = 1.5, y = 830, label = "**", size = 7) +
-  annotate("segment", x = 2, xend = 3, y = 880, yend = 880, linewidth = 0.8) +
-  annotate("text", x = 2.5, y = 910, label = "****", size = 7)
+  annotate("segment", x = 1, xend = 3, y = 1050, yend = 1050, linewidth = 1.2) +
+  annotate("text", x = 2, y = 1080, label = "*", size = 8)
 
-# -----------------------------
-# Significance legend inside plot
-# -----------------------------
-p_bradford <- p_bradford +
-  annotate("text", x = 1, y = 950,
-           label = "** p < 0.01   |   **** p < 0.0001",
-           hjust = 0, size = 5)
-
+# ---------------------------------------------------------
+# 7. PRINT
+# ---------------------------------------------------------
 print(p_bradford)
