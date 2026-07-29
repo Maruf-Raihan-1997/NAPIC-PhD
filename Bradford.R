@@ -75,7 +75,7 @@ p_bradford <- ggplot(df_plot, aes(x = Sample, y = Mean, fill = Sample)) +
     title = "Protein Concentration (Bradford Assay)",
     x = "Food Vehicle",
     y = "Protein Concentration (µg/mL)"
-  )
+  ) 
 
 # ---------------------------------------------------------
 # 6. SINGLE ANOVA BRACKET ACROSS ALL THREE BARS
