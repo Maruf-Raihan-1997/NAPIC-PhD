@@ -78,7 +78,7 @@ p_opa <- ggplot(df_stats, aes(x = Sample, y = Mean, fill = Sample)) +
     axis.ticks = element_line(colour = "black", linewidth = 1.2)
   ) +
   labs(
-    title = "Apparent Protein Digestibility (OPA)",
+    title = "Apparent Protein Digestibility % (OPA assay)",
     x = "Food Vehicle",
     y = "Degree of protein hydrolysis (%)"
   )
