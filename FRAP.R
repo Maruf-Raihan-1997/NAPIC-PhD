@@ -118,9 +118,9 @@ p <- ggplot(df_summary, aes(x = Sample, y = Mean, fill = Sample)) +
     axis.title.y = element_text(size = 16, face = "bold")
   ) +
   labs(
-    title = "In Vitro Digestion Increased the Antioxidant Capacity (FRAP) of Duckweed",
+    title = "Antioxidant Capacity (FRAP assay)",
     x = "Food Vehicle",
-    y = "FRAP (µmol Fe²⁺/g dry weight)"
+    y = "FRAP (µmol TE/g dry weight)"
   )
 
 # -----------------------------

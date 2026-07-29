@@ -78,9 +78,9 @@ p_opa <- ggplot(df_stats, aes(x = Sample, y = Mean, fill = Sample)) +
     axis.ticks = element_line(colour = "black", linewidth = 1.2)
   ) +
   labs(
-    title = "OPA-Measured Protein Hydrolysis of Duckweed in Different Food Matrices",
+    title = "Apparent Protein Digestibility (OPA)",
     x = "Food Vehicle",
-    y = "OPA Value (µmol Serine Equiv./g)"
+    y = "Degree of protein hydrolysis (%)"
   )
 
 # ---------------------------------------------------------

@@ -60,8 +60,19 @@ p_bradford <- ggplot(df_plot, aes(x = Sample, y = Mean, fill = Sample)) +
   ) +
   
   theme_bw(base_size = 14) +
+  theme(
+    legend.position = "right",
+    legend.box = "vertical",
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    axis.text.x = element_text(size = 14, face = "bold"),
+    axis.text.y = element_text(size = 14, face = "bold"),
+    axis.title.x = element_text(size = 16, face = "bold"),
+    axis.title.y = element_text(size = 16, face = "bold"),
+    axis.line = element_line(colour = "black", linewidth = 1.2),
+    axis.ticks = element_line(colour = "black", linewidth = 1.2)
+  ) +
   labs(
-    title = "Protein Concentration of Duckweed After In Vitro Digestion",
+    title = "Protein Concentration (Bradford Assay)",
     x = "Food Vehicle",
     y = "Protein Concentration (µg/mL)"
   )

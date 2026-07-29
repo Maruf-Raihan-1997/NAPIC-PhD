@@ -117,7 +117,7 @@ p <- ggplot(df_summary, aes(x = Sample, y = Mean, fill = Sample)) +
     axis.title.y = element_text(size = 16, face = "bold")
   ) +
   labs(
-    title = "In Vitro Digestion Increased the Total Phenolic Content of Duckweed",
+    title = "Total Phenolic Content (Folin Assay)",
     x = "Food Vehicle",
     y = "TPC (mg GAE/g dry weight)"
   )
