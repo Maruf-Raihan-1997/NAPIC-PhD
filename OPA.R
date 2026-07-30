@@ -1,5 +1,9 @@
+#This Code is made by Maruf Raihan (PhD,NICHE,Ulster)for OPA data statistical analysis and visual presentation
+
 library(ggplot2)
 library(emmeans)
+library(multcomp)
+library(multcompView)
 
 # ---------------------------------------------------------
 # 1. RAW OPA DATA
@@ -25,11 +29,23 @@ df_stats <- do.call(data.frame, df_stats)
 names(df_stats) <- c("Sample", "Mean", "SD", "CV")
 
 # ---------------------------------------------------------
-# 3. ANOVA + TUKEY (only p-values)
+# 3. ANOVA + TUKEY
 # ---------------------------------------------------------
 model <- aov(Value ~ Sample, data = df_raw)
 emm <- emmeans(model, ~ Sample)
 tukey <- summary(pairs(emm, adjust = "tukey"))
+
+# ---------------------------------------------------------
+# 4. Tukey LETTERS
+# ---------------------------------------------------------
+cld_out <- suppressMessages(
+  cld(emm, Letters = letters, adjust = "tukey")
+)
+
+letters_df <- as.data.frame(cld_out)
+
+# Merge letters into stats
+df_stats2 <- merge(df_stats, letters_df[, c("Sample", ".group")], by = "Sample")
 
 # Extract p-values
 p_WB  <- tukey$p.value[1]   # Water vs Banana
@@ -37,7 +53,7 @@ p_WBr <- tukey$p.value[2]   # Water vs Bread
 p_BBr <- tukey$p.value[3]   # Banana vs Bread
 
 # ---------------------------------------------------------
-# 4. Convert p-values → asterisks
+# 5. Convert p-values → asterisks
 # ---------------------------------------------------------
 p_to_star <- function(p) {
   if (p < 0.0001) return("****")
@@ -51,12 +67,19 @@ star_WBr <- p_to_star(p_WBr)
 star_BBr <- p_to_star(p_BBr)
 
 # ---------------------------------------------------------
-# 5. BASE PLOT (no Tukey letters)
+# 6. BASE PLOT
 # ---------------------------------------------------------
-p_opa <- ggplot(df_stats, aes(x = Sample, y = Mean, fill = Sample)) +
+p_opa <- ggplot(df_stats2, aes(x = Sample, y = Mean, fill = Sample)) +
   geom_col(width = 0.7) +
   geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD),
                 width = 0.2, linewidth = 1) +
+  
+  # Tukey letters ABOVE bars
+  geom_text(
+    aes(x = Sample, y = Mean + SD + 5, label = .group),
+    size = 7,
+    fontface = "bold"
+  ) +
   
   scale_fill_manual(
     values = c("DW-Water" = "steelblue",
@@ -84,7 +107,7 @@ p_opa <- ggplot(df_stats, aes(x = Sample, y = Mean, fill = Sample)) +
   )
 
 # ---------------------------------------------------------
-# 6. AUTOMATED BRACKETS BASED ON ANOVA OUTPUT
+# 7. AUTOMATED BRACKETS BASED ON ANOVA OUTPUT
 # ---------------------------------------------------------
 
 # Water vs Banana
@@ -105,7 +128,7 @@ p_opa <- p_opa +
 print(p_opa)
 
 cat("\n=== DESCRIPTIVE STATS ===\n")
-print(df_stats)
+print(df_stats2)
 
 cat("\n=== ANOVA SUMMARY ===\n")
 print(summary(model))

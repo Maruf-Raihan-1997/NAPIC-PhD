@@ -1,4 +1,4 @@
-#This Code is made by Maruf Raihan for bradford data statistical analysis and visual presentation
+#This Code is made by Maruf Raihan (PhD,NICHE,Ulster)for Bradford data statistical analysis and visual presentation
 
 library(emmeans)
 library(multcomp)
@@ -9,12 +9,12 @@ library(ggplot2)
 # 1. RAW DATA
 # ---------------------------------------------------------
 df <- data.frame(
-  Sample = factor(rep(c("DW-Water", "DW-Banana", "DW-Bread"), each = 3),
-                  levels = c("DW-Water", "DW-Banana", "DW-Bread")),
+  Sample = factor(rep(c("10%(w/v) DW-Water", "10%(w/w) DW-Banana", "10%(w/w) DW-Bread"), each = 3),
+                  levels = c("10%(w/v) DW-Water", "10%(w/w) DW-Banana", "10%(w/w) DW-Bread")),
   Protein = c(
-    639.00, 472.04, 701.52,   # DW-Water
-    400.72, 441.69, 447.00,   # DW-Banana
-    448.05, 480.52, 450.14    # DW-Bread
+    639.00, 472.04, 701.52,   # 10%(w/v) DW-Water
+    400.72, 441.69, 447.00,   # 10%(w/w) DW-Banana
+    448.05, 480.52, 450.14    # 10%(w/w) DW-Bread"
   )
 )
 
@@ -54,9 +54,10 @@ p_bradford <- ggplot(df_plot, aes(x = Sample, y = Mean, fill = Sample)) +
   geom_text(aes(label = .group, y = Mean + SD + 30), size = 7) +
   
   scale_fill_manual(
-    values = c("DW-Water" = "steelblue",
-               "DW-Banana" = "forestgreen",
-               "DW-Bread" = "saddlebrown")
+    name= "Sample Legend",
+    values = c("10%(w/v) DW-Water" = "steelblue",
+               "10%(w/w) DW-Banana" = "forestgreen",
+               "10%(w/w) DW-Bread" = "saddlebrown")
   ) +
   
   theme_bw(base_size = 14) +
@@ -80,9 +81,9 @@ p_bradford <- ggplot(df_plot, aes(x = Sample, y = Mean, fill = Sample)) +
 # ---------------------------------------------------------
 # 6. SINGLE ANOVA BRACKET ACROSS ALL THREE BARS
 # ---------------------------------------------------------
-p_bradford <- p_bradford +
-  annotate("segment", x = 1, xend = 3, y = 1050, yend = 1050, linewidth = 1.2) +
-  annotate("text", x = 2, y = 1080, label = "*", size = 8)
+#p_bradford <- p_bradford +
+#  annotate("segment", x = 1, xend = 3, y = 1050, yend = 1050, linewidth = 1.2) +
+# annotate("text", x = 2, y = 1080, label = "*", size = 8)
 
 # ---------------------------------------------------------
 # 7. PRINT

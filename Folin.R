@@ -1,3 +1,6 @@
+#This Code is made by Maruf Raihan (PhD,NICHE,Ulster)for Folin data statistical analysis and visual presentation
+
+
 library(dplyr)
 library(ggplot2)
 library(multcompView)
@@ -26,6 +29,15 @@ pvals <- tukey$group[, "p adj"]
 names(pvals) <- rownames(tukey$group)
 
 # -----------------------------
+# Tukey LETTERS (NEW)
+# -----------------------------
+letters <- multcompLetters(pvals)$Letters
+letters_df <- data.frame(
+  Sample = names(letters),
+  Letter = letters
+)
+
+# -----------------------------
 # Summary table (means + SD)
 # -----------------------------
 df_summary <- df %>%
@@ -38,6 +50,9 @@ df_summary <- df %>%
 
 df_summary$Sample <- factor(df_summary$group,
                             levels = c("Undigested", "DW_Water", "DW_Banana", "DW_Bread"))
+
+# Merge Tukey letters into summary
+df_summary <- merge(df_summary, letters_df, by.x = "Sample", by.y = "Sample")
 
 # -----------------------------
 # Function: convert p-value → asterisks
@@ -71,7 +86,7 @@ comparisons <- comparisons %>%
 # Undigested – DW_Banana
 # Undigested – DW_Bread
 # DW_Water – DW_Bread
-
+# -----------------------------
 remove_comps <- c(
   "Undigested-DW_Banana",
   "DW_Banana-Undigested",
@@ -96,6 +111,15 @@ p <- ggplot(df_summary, aes(x = Sample, y = Mean, fill = Sample)) +
   geom_col(width = 0.7) +
   geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD),
                 width = 0.2, linewidth = 1) +
+  
+  # -----------------------------
+# ADD TUKEY LETTERS ABOVE BARS
+# -----------------------------
+geom_text(
+  aes(label = Letter, y = Mean + SD + 5),
+  size = 7,
+  fontface = "bold"
+) +
   
   scale_fill_manual(
     values = c("Undigested" = "darkgreen",
@@ -144,7 +168,7 @@ print(p)
 # -----------------------------
 # Console output
 # -----------------------------
-cat("\n=== DESCRIPTIVE STATS ===\n")
+cat("\n=== DESCRIPTIVE STATS + TUKEY LETTERS ===\n")
 print(df_summary)
 
 cat("\n=== ANOVA SUMMARY ===\n")
