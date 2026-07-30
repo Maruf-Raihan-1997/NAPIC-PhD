@@ -9,13 +9,13 @@ library(multcompView)
 # Raw data
 # -----------------------------
 TPC <- c(
-  22.1, 21.0, 23.1,        # Undigested
-  80.0, 65.4, 64.1,        # DW-Water
-  52.4, 55.1, 53.2,        # DW-Banana
-  105.13, 89.83, 94.30     # DW-Bread
+  22.1, 21.0, 23.1,        # Undigested DW
+  80.0, 65.4, 64.1,        # 10%(w/v)\nDW Water
+  52.4, 55.1, 53.2,        # 10%(w/w)\nDW Banana
+  105.13, 89.83, 94.30     # 10%(w/w)\nDW Bread
 )
 
-group <- factor(rep(c("Undigested", "DW_Water", "DW_Banana", "DW_Bread"), each = 3))
+group <- factor(rep(c("Undigested DW", "10%(w/v)\nDW Water", "10%(w/w)\nDW Banana", "10%(w/w)\nDW Bread"), each = 3))
 df <- data.frame(TPC, group)
 
 # -----------------------------
@@ -49,7 +49,7 @@ df_summary <- df %>%
   )
 
 df_summary$Sample <- factor(df_summary$group,
-                            levels = c("Undigested", "DW_Water", "DW_Banana", "DW_Bread"))
+                            levels = c("Undigested DW", "10%(w/v)\nDW Water", "10%(w/w)\nDW Banana", "10%(w/w)\nDW Bread"))
 
 # Merge Tukey letters into summary
 df_summary <- merge(df_summary, letters_df, by.x = "Sample", by.y = "Sample")
@@ -83,16 +83,16 @@ comparisons <- comparisons %>%
 
 # -----------------------------
 # REMOVE ONLY:
-# Undigested – DW_Banana
-# Undigested – DW_Bread
-# DW_Water – DW_Bread
+# Undigested DW – 10%(w/w)\nDW Banana
+# Undigested DW – 10%(w/w) \nDW Bread
+# 10%(w/v)\nDW Water – 10%(w/w) \nDW Bread
 # -----------------------------
 remove_comps <- c(
-  "Undigested-DW_Banana",
-  "DW_Banana-Undigested",
-  "DW_Water-DW_Bread",
-  "DW_Bread-DW_Water",
-  "Undigested-DW_Bread"
+  "Undigested DW-10%(w/w)\nDW Banana",
+  "10%(w/w)\nDW Banana-Undigested DW",
+  "10%(w/v)\nDW Water-10%(w/w)\nDW Bread",
+  "10%(w/w)\nDW Bread-10%(w/v)\nDW Water",
+  "Undigested DW-10%(w/w)\nDW Bread"
 )
 
 comparisons <- comparisons %>%
@@ -122,10 +122,16 @@ geom_text(
 ) +
   
   scale_fill_manual(
-    values = c("Undigested" = "darkgreen",
-               "DW_Water"   = "steelblue",
-               "DW_Banana"  = "forestgreen",
-               "DW_Bread"   = "saddlebrown"),
+    values = c("Undigested DW" = "darkgreen",
+               "10%(w/v)\nDW Water"   = "steelblue",
+               "10%(w/w)\nDW Banana"  = "forestgreen",
+               "10%(w/w)\nDW Bread"   = "saddlebrown"),
+    labels = c(
+      "Undigested DW",
+      "10% (w/v) DW Water",
+      "10% (w/w) DW Banana",
+      "10% (w/w) DW Bread"
+    ),
     name = "Sample Legend"
   ) +
   

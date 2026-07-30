@@ -9,12 +9,12 @@ library(ggplot2)
 # 1. RAW DATA
 # ---------------------------------------------------------
 df <- data.frame(
-  Sample = factor(rep(c("10%(w/v) DW-Water", "10%(w/w) DW-Banana", "10%(w/w) DW-Bread"), each = 3),
-                  levels = c("10%(w/v) DW-Water", "10%(w/w) DW-Banana", "10%(w/w) DW-Bread")),
+  Sample = factor(rep(c("10%(w/v)\nDW Water", "10%(w/w)\nDW Banana", "10%(w/w) \nDW Bread"), each = 3),
+                  levels = c("10%(w/v)\nDW Water", "10%(w/w)\nDW Banana", "10%(w/w) \nDW Bread")),
   Protein = c(
-    639.00, 472.04, 701.52,   # 10%(w/v) DW-Water
-    400.72, 441.69, 447.00,   # 10%(w/w) DW-Banana
-    448.05, 480.52, 450.14    # 10%(w/w) DW-Bread"
+    639.00, 472.04, 701.52,   # 10%(w/v)\nDW Water
+    400.72, 441.69, 447.00,   # 10%(w/w)\nDW Banana
+    448.05, 480.52, 450.14    # 10%(w/w) \nDW Bread"
   )
 )
 
@@ -55,9 +55,14 @@ p_bradford <- ggplot(df_plot, aes(x = Sample, y = Mean, fill = Sample)) +
   
   scale_fill_manual(
     name= "Sample Legend",
-    values = c("10%(w/v) DW-Water" = "steelblue",
-               "10%(w/w) DW-Banana" = "forestgreen",
-               "10%(w/w) DW-Bread" = "saddlebrown")
+    values = c("10%(w/v)\nDW Water" = "steelblue",
+               "10%(w/w)\nDW Banana" = "forestgreen",
+               "10%(w/w) \nDW Bread" = "saddlebrown"),
+    labels = c(
+      "10% (w/v) DW Water",
+      "10% (w/w) DW Banana",
+      "10% (w/w) DW Bread"
+    ),
   ) +
   
   theme_bw(base_size = 14) +
