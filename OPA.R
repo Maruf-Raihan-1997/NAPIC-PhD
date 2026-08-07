@@ -98,6 +98,7 @@ p_opa <- ggplot(df_stats2, aes(x = Sample, y = Mean, fill = Sample)) +
   theme(
     legend.position = "right",
     legend.box = "vertical",
+    legend.margin = margin(t = 170),      # push legend downward
     plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
     axis.text.x = element_text(size = 14, face = "bold"),
     axis.text.y = element_text(size = 14, face = "bold"),
