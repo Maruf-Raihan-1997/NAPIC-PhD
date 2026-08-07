@@ -1,4 +1,4 @@
-# ---------------------------------------------------------
+##This Code is made by Maruf Raihan (PhD,NICHE,Ulster)for OPA data statistical analysis and visual presentation
 # DL-SERINE STANDARD CURVE 
 # ---------------------------------------------------------
 
@@ -13,7 +13,7 @@ std_df <- data.frame(
 pos_df <- data.frame(
   Serine = 186.19,
   Abs    = 0.32,
-  Type   = "Positive control (BSA)"
+  Type   = "Positive control (10% (w/v) BSA)"
 )
 
 neg_df <- data.frame(
@@ -42,11 +42,13 @@ p_std_small <- ggplot(std_df, aes(x = Serine, y = Abs)) +
   geom_point(data = neg_df, aes(colour = Type), size = 4.5) +
   
   scale_colour_manual(
-    values = c("Negative control (DDH2O)" = "red",
-               "Positive control (BSA)" = "green"),
+    values = c(
+      "Negative control (DDH2O)" = "red",
+      "Positive control (10% (w/v) BSA)" = "green"
+    ),
     labels = c(
       expression("Negative control (DDH"["2"]*"O)"),
-      "Positive control (BSA)"
+      "Positive control (10% (w/v) BSA)"
     )
   ) +
   
@@ -63,20 +65,18 @@ p_std_small <- ggplot(std_df, aes(x = Serine, y = Abs)) +
   
   theme_bw(base_size = 16) +
   theme(
-    # Centered title
     plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
-    
-    # Axis titles (Y-axis smaller)
     axis.title.x = element_text(size = 16, face = "bold"),
     axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text    = element_text(size = 14),
     
-    # Axis text
-    axis.text = element_text(size = 14),
+    # Matching Bradford axis line width
+    axis.line  = element_line(colour = "black", linewidth = 1.5),
+    axis.ticks = element_line(colour = "black", linewidth = 1.5),
     
-    # Legend
     legend.position = "bottom",
-    legend.text = element_text(size = 14),
-    legend.key = element_rect(fill = NA, colour = NA),
+    legend.text     = element_text(size = 14),
+    legend.key      = element_rect(fill = NA, colour = NA),
     legend.key.width  = unit(0.15, "cm"),
     legend.key.height = unit(0.15, "cm"),
     legend.spacing.x  = unit(0.15, "cm"),

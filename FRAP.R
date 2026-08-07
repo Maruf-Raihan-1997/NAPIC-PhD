@@ -137,6 +137,7 @@ geom_text(
   theme_bw(base_size = 14) +
   theme(
     legend.position = "right",
+    legend.margin = margin(t = 170),      # push legend downward
     legend.title = element_text(size = 14, face = "bold"),
     legend.text  = element_text(size = 12),
     plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
