@@ -9,12 +9,12 @@ library(multcompView)
 # 1. RAW OPA DATA
 # ---------------------------------------------------------
 df_raw <- data.frame(
-  Sample = factor(rep(c("10%(w/v)\nDW Water", "10%(w/w)\nDW Banana", "10%(w/w) \nDW Bread"), each = 3),
-                  levels = c("10%(w/v)\nDW Water", "10%(w/w)\nDW Banana", "10%(w/w) \nDW Bread")),
+  Sample = factor(rep(c("10%(w/v)\nDWP Water", "10%(w/w)\nDWP Banana", "10%(w/w) \nDWP Bread"), each = 3),
+                  levels = c("10%(w/v)\nDWP Water", "10%(w/w)\nDWP Banana", "10%(w/w) \nDWP Bread")),
   Value = c(
-    28.36, 24.83, 33.51,   # 10%(w/v)\nDW Water
-    32.78, 43.67, 50.13,   # 10%(w/w)\nDW Banana
-    76.13, 84.81, 81.92    # 10%(w/w) \nDW Bread
+    28.36, 24.83, 33.51,   # 10%(w/v)\nDWP Water
+    32.78, 43.67, 50.13,   # 10%(w/w)\nDWP Banana
+    76.13, 84.81, 81.92    # 10%(w/w) \nDWP Bread
   )
 )
 
@@ -82,13 +82,13 @@ p_opa <- ggplot(df_stats2, aes(x = Sample, y = Mean, fill = Sample)) +
   ) +
   
   scale_fill_manual(
-    values = c("10%(w/v)\nDW Water" = "steelblue",
-               "10%(w/w)\nDW Banana" = "forestgreen",
-               "10%(w/w) \nDW Bread" = "saddlebrown"),
+    values = c("10%(w/v)\nDWP Water" = "steelblue",
+               "10%(w/w)\nDWP Banana" = "forestgreen",
+               "10%(w/w) \nDWP Bread" = "saddlebrown"),
     labels = c(
-      "10% (w/v) DW Water",
-      "10% (w/w) DW Banana",
-      "10% (w/w) DW Bread"
+      "10% (w/v) DWP Water",
+      "10% (w/w) DWP Banana",
+      "10% (w/w) DWP Bread"
     ),
     
     name = "Sample Legend"

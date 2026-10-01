@@ -8,13 +8,13 @@ library(multcompView)
 # Raw FRAP data
 # -----------------------------
 FRAP <- c(
-  33.80, 32.20, 24.80,      # Undigested DW
-  68.80, 68.10, 70.20,      # 10%(w/v)\nDW Water
-  41.60, 45.30, 49.00,      # 10%(w/w)\nDW Banana
-  81.40, 65.61, 64.97       # 10%(w/w)\nDW Bread
+  33.80, 32.20, 24.80,      # Undigested DWP
+  68.80, 68.10, 70.20,      # 10%(w/v)\nDWP Water
+  41.60, 45.30, 49.00,      # 10%(w/w)\nDWP Banana
+  81.40, 65.61, 64.97       # 10%(w/w)\nDWP Bread
 )
 
-group <- factor(rep(c("Undigested DW", "10%(w/v)\nDW Water", "10%(w/w)\nDW Banana", "10%(w/w)\nDW Bread"), each = 3))
+group <- factor(rep(c("Undigested DWP", "10%(w/v)\nDWP Water", "10%(w/w)\nDWP Banana", "10%(w/w)\nDWP Bread"), each = 3))
 df <- data.frame(FRAP, group)
 
 # -----------------------------
@@ -48,7 +48,7 @@ df_summary <- df %>%
   )
 
 df_summary$Sample <- factor(df_summary$group,
-                            levels = c("Undigested DW", "10%(w/v)\nDW Water", "10%(w/w)\nDW Banana", "10%(w/w)\nDW Bread"))
+                            levels = c("Undigested DWP", "10%(w/v)\nDWP Water", "10%(w/w)\nDWP Banana", "10%(w/w)\nDWP Bread"))
 
 # Merge Tukey letters into summary
 df_summary <- merge(df_summary, letters_df, by.x = "Sample", by.y = "Sample")
@@ -82,16 +82,16 @@ comparisons <- comparisons %>%
 
 # -----------------------------
 # REMOVE ONLY:
-# Undigested DW – 10%(w/w)\nDW Banana
-# Undigested DW – 10%(w/w)\nDW Bread
-# DW_Water – 10%(w/w)\nDW Bread
+# Undigested DWP – 10%(w/w)\nDWP Banana
+# Undigested DWP – 10%(w/w)\nDWP Bread
+# DWP_Water – 10%(w/w)\nDWP Bread
 # -----------------------------
 remove_comps <- c(
-  "Undigested DW-10%(w/w)\nDW Banana",
-  "10%(w/w)\nDW Banana-Undigested DW",
-  "10%(w/v)\nDW Water-10%(w/w) \nDW Bread",
-  "10%(w/w)\nDW Bread-10%(w/v)\nDW Water",
-  "Undigested DW-10%(w/w)\nDW Bread"
+  "Undigested DWP-10%(w/w)\nDWP Banana",
+  "10%(w/w)\nDWP Banana-Undigested DWP",
+  "10%(w/v)\nDWP Water-10%(w/w) \nDWP Bread",
+  "10%(w/w)\nDWP Bread-10%(w/v)\nDWP Water",
+  "Undigested DWP-10%(w/w)\nDWP Bread"
 )
 
 comparisons <- comparisons %>%
@@ -121,15 +121,15 @@ geom_text(
 ) +
   
   scale_fill_manual(
-    values = c("Undigested DW" = "darkgreen",
-               "10%(w/v)\nDW Water"   = "steelblue",
-               "10%(w/w)\nDW Banana"  = "forestgreen",
-               "10%(w/w)\nDW Bread"   = "saddlebrown"),
+    values = c("Undigested DWP" = "grey40",
+               "10%(w/v)\nDWP Water"   = "steelblue",
+               "10%(w/w)\nDWP Banana"  = "forestgreen",
+               "10%(w/w)\nDWP Bread"   = "saddlebrown"),
     labels = c(
-      "Undigested DW",
-      "10% (w/v) DW Water",
-      "10% (w/w) DW Banana",
-      "10% (w/w) DW Bread"
+      "Undigested DWP",
+      "10% (w/v) DWP Water",
+      "10% (w/w) DWP Banana",
+      "10% (w/w) DWP Bread"
     ),
     name = "Sample Legend"
   ) +
@@ -144,7 +144,9 @@ geom_text(
     axis.text.x = element_text(size = 14, face = "bold"),
     axis.text.y = element_text(size = 14, face = "bold"),
     axis.title.x = element_text(size = 16, face = "bold"),
-    axis.title.y = element_text(size = 16, face = "bold")
+    axis.title.y = element_text(size = 16, face = "bold"),
+    axis.line = element_line(colour = "black", linewidth = 1.2),
+    axis.ticks = element_line(colour = "black", linewidth = 1.2)
   ) +
   labs(
     title = "Antioxidant Capacity (FRAP assay)",
