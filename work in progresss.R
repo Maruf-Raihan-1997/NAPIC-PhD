@@ -1,12 +1,10 @@
 # =====================================================================
 # Free amino acid release from Lemna minor duckweed after in vitro digestion
-# Statistics (One-way ANOVA + Tukey HSD)
+# Statistics (TWO-way ANOVA + INTERACTION)
 # Conference Poster Version (Portrait)
 # =====================================================================
 
 library(tidyverse)
-library(broom)
-library(multcompView)
 
 # ---------------------------------------------------------------------
 # 1. Data
@@ -67,137 +65,82 @@ dat <- tribble(
     )
   )
 
+# =====================================================================
+# TWO-WAY ANOVA
+# =====================================================================
+
+library(tidyverse)
+library(car)
+library(broom)
+
 # ---------------------------------------------------------------------
-# 2. Summary statistics
+# Two-way ANOVA
 # ---------------------------------------------------------------------
 
-summ <- dat |>
-  group_by(amino_acid, treatment) |>
+fit2 <- aov(conc ~ treatment * amino_acid, data = dat)
+
+cat("\n=== TWO-WAY ANOVA ===\n")
+print(summary(fit2))
+
+# =====================================================================
+# ASSUMPTION CHECKS
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# Normality of residuals
+# ---------------------------------------------------------------------
+
+res <- residuals(fit2)
+
+cat("\n=== SHAPIRO-WILK TEST ===\n")
+print(shapiro.test(res))
+
+qqnorm(res)
+qqline(res, col = "red", lwd = 2)
+
+hist(
+  res,
+  main = "Residual Distribution",
+  xlab = "Residuals"
+)
+
+# ---------------------------------------------------------------------
+# Homogeneity of Variance
+# ---------------------------------------------------------------------
+
+cat("\n=== LEVENE TEST ===\n")
+
+levene_result <- leveneTest(
+  conc ~ interaction(treatment, amino_acid),
+  data = dat
+)
+
+print(levene_result)
+
+# =====================================================================
+# SUMMARY STATISTICS
+# =====================================================================
+
+plot_data <- dat %>%
+  group_by(amino_acid, treatment) %>%
   summarise(
     n = n(),
     mean = mean(conc),
     sd = sd(conc),
-    ymax = mean + sd,
     .groups = "drop"
   )
 
-print(summ, n = Inf)
+cat("\n=== SUMMARY STATISTICS ===\n")
+print(plot_data)
 
-# ---------------------------------------------------------------------
-# 3. Levene Test
-# ---------------------------------------------------------------------
-
-levene_tbl <- dat |>
-  group_by(amino_acid) |>
-  summarise(
-    levene_p = car::leveneTest(conc ~ treatment)$`Pr(>F)`[1],
-    .groups = "drop"
-  )
-
-print(levene_tbl)
-
-# ---------------------------------------------------------------------
-# 4. ANOVA
-# ---------------------------------------------------------------------
-
-anova_tbl <- dat |>
-  group_by(amino_acid) |>
-  group_modify(~{
-    
-    fit <- aov(conc ~ treatment, data = .x)
-    
-    broom::tidy(fit) |>
-      dplyr::filter(term == "treatment") |>
-      dplyr::select(df, statistic, p.value)
-    
-  }) |>
-  ungroup()
-
-print(anova_tbl)
-
-# ---------------------------------------------------------------------
-# 5. Tukey HSD
-# ---------------------------------------------------------------------
-
-tukey_tbl <- dat |>
-  group_by(amino_acid) |>
-  group_modify(~{
-    
-    fit <- aov(conc ~ treatment, data = .x)
-    
-    as_tibble(
-      TukeyHSD(fit)$treatment,
-      rownames = "comparison"
-    )
-    
-  }) |>
-  ungroup()
-
-print(tukey_tbl, n = Inf)
-
-# ---------------------------------------------------------------------
-# 6. Compact Letter Display
-# ---------------------------------------------------------------------
-
-letters_tbl <- dat |>
-  group_by(amino_acid) |>
-  group_modify(~{
-    
-    fit <- aov(conc ~ treatment, data = .x)
-    
-    let <- multcompLetters4(
-      fit,
-      TukeyHSD(fit)
-    )$treatment$Letters
-    
-    tibble(
-      treatment = names(let),
-      letter = unname(let)
-    )
-    
-  }) |>
-  ungroup() |>
-  mutate(
-    treatment = factor(
-      treatment,
-      levels = codes
-    )
-  )
-
-plot_summ <- left_join(
-  summ,
-  letters_tbl,
-  by = c("amino_acid", "treatment")
-)
-
-# ---------------------------------------------------------------------
-# 7. Percent Change Relative to Water
-# ---------------------------------------------------------------------
-
-pct_tbl <- summ |>
-  dplyr::select(amino_acid, treatment, mean) |>
-  pivot_wider(
-    names_from = treatment,
-    values_from = mean
-  ) |>
-  mutate(
-    across(
-      c(ND, Bn, Br),
-      ~ round(100 * (.x - W) / W, 1),
-      .names = "pct_{.col}_vs_W"
-    )
-  )
-
-print(pct_tbl)
-
-# ---------------------------------------------------------------------
-# 8. Plot
-# ---------------------------------------------------------------------
+# =====================================================================
+# BAR CHART (MEAN ± SD)
+# =====================================================================
 
 dodge <- position_dodge(width = 0.8)
 
-p <- ggplot(
-  plot_summ,
+p_twoway <- ggplot(
+  plot_data,
   aes(
     x = amino_acid,
     y = mean,
@@ -221,38 +164,6 @@ p <- ggplot(
     linewidth = 0.8
   ) +
   
-  geom_text(
-    data = dplyr::filter(
-      plot_summ,
-      amino_acid != "Aspartic acid"
-    ),
-    aes(
-      y = ymax + 0.05,
-      label = letter
-    ),
-    position = dodge,
-    fontface = "bold",
-    size = 6
-  ) +
-  
-  annotate(
-    "segment",
-    x = 1.7,
-    xend = 2.3,
-    y = 1.35,
-    yend = 1.35,
-    linewidth = 0.8
-  ) +
-  
-  annotate(
-    "text",
-    x = 2,
-    y = 1.39,
-    label = "ns",
-    fontface = "bold",
-    size = 6
-  ) +
-  
   scale_fill_manual(
     values = cols,
     labels = labels,
@@ -260,12 +171,11 @@ p <- ggplot(
   ) +
   
   scale_y_continuous(
-    limits = c(0, 1.6),
-    breaks = seq(0, 1.6, 0.2),
-    expand = c(0, 0)
+    expand = expansion(mult = c(0, 0.05))
   ) +
   
   labs(
+    title = "Free Amino Acid Release",
     x = "Free Amino Acid",
     y = "Free Amino Acid Concentration (mg/g)"
   ) +
@@ -293,7 +203,7 @@ p <- ggplot(
     ),
     
     axis.text.y = element_text(
-      size = 8,
+      size = 12,
       face = "bold",
       colour = "black"
     ),
@@ -325,15 +235,15 @@ p <- ggplot(
     panel.grid.minor = element_blank()
   )
 
-print(p)
+print(p_twoway)
 
-# ---------------------------------------------------------------------
-# 9. Export (Portrait)
-# ---------------------------------------------------------------------
+# =====================================================================
+# EXPORT
+# =====================================================================
 
 ggsave(
-  "Free_Amino_Acids_Portrait_Poster.png",
-  p,
+  "Free_Amino_Acid_TwoWay_ANOVA.png",
+  p_twoway,
   width = 7,
   height = 9,
   dpi = 600,
@@ -341,25 +251,226 @@ ggsave(
 )
 
 ggsave(
-  "Free_Amino_Acids_Portrait_Poster.pdf",
-  p,
+  "Free_Amino_Acid_TwoWay_ANOVA.pdf",
+  p_twoway,
   width = 7,
   height = 9
 )
 
 if (requireNamespace("svglite", quietly = TRUE)) {
+  
   ggsave(
-    "Free_Amino_Acids_Portrait_Poster.svg",
-    p,
+    "Free_Amino_Acid_TwoWay_ANOVA.svg",
+    p_twoway,
     width = 7,
     height = 9
   )
+  
 }
 
 # ---------------------------------------------------------------------
-# 10. Save statistics
+# Interaction Plot with 95% CI
+
+#Think of 95% confidence interval (CI) as:
+
+#"Given my sample data, the true population mean is likely to lie somewhere within this range."
+
+#It tells you how precise your estimate is, whereas the mean tells you the best estimate itself.
 # ---------------------------------------------------------------------
 
-write_csv(anova_tbl, "anova_results.csv")
-write_csv(tukey_tbl, "tukey_results.csv")
-write_csv(plot_summ, "summary_means_sd_letters.csv")
+# ---------------------------------------------------------------------
+# Interaction Plot with Mean ± SD
+# ---------------------------------------------------------------------
+
+interaction_summary <- dat %>%
+  group_by(amino_acid, treatment) %>%
+  summarise(
+    n = n(),
+    mean = mean(conc),
+    sd = sd(conc),
+    .groups = "drop"
+  )
+
+p_interaction <- ggplot(
+  interaction_summary,
+  aes(
+    x = treatment,
+    y = mean,
+    colour = amino_acid,
+    group = amino_acid
+  )
+) +
+  
+  geom_line(linewidth = 1.2) +
+  
+  geom_point(size = 4) +
+  
+  geom_errorbar(
+    aes(
+      ymin = mean - sd,
+      ymax = mean + sd
+    ),
+    width = 0.12,
+    linewidth = 0.8
+  ) +
+  
+  scale_x_discrete(
+    labels = labels
+  ) +
+  
+  scale_colour_manual(
+    values = c(
+      "Glutamic acid" = "#D55E00",
+      "Aspartic acid" = "#0072B2",
+      "Leucine" = "#009E73"
+    )
+  ) +
+  
+  labs(
+    title = "Treatment × Amino Acid Interaction",
+    x = "Food Matrix",
+    y = "Free Amino Acid Concentration (mg/g)",
+    colour = "Amino Acid"
+  ) +
+  
+  theme_bw(base_size = 16) +
+  
+  theme(
+    legend.position = "top",
+    legend.title = element_text(
+      face = "bold"
+    ),
+    
+    axis.text.x = element_text(
+      angle = 15,
+      hjust = 1,
+      face = "bold"
+    ),
+    
+    axis.title = element_text(
+      face = "bold"
+    ),
+    
+    plot.title = element_text(
+      face = "bold",
+      hjust = 0.5
+    ),
+    
+    panel.grid.minor = element_blank()
+  )
+
+print(p_interaction)
+
+
+
+# ---------------------------------------------------------------------
+# Summary statistics
+# ---------------------------------------------------------------------
+
+plot2 <- dat %>%
+  group_by(amino_acid, treatment) %>%
+  summarise(
+    mean = mean(conc),
+    sd = sd(conc),
+    .groups = "drop"
+  )
+
+# ---------------------------------------------------------------------
+# Plot
+# ---------------------------------------------------------------------
+
+dodge <- position_dodge(width = 0.8)
+
+p_twoway <- ggplot(
+  plot2,
+  aes(
+    x = amino_acid,
+    y = mean,
+    fill = treatment
+  )
+) +
+  
+  geom_col(
+    position = dodge,
+    width = 0.8,
+    colour = "white"
+  ) +
+  
+  geom_errorbar(
+    aes(
+      ymin = mean - sd,
+      ymax = mean + sd
+    ),
+    position = dodge,
+    width = 0.25,
+    linewidth = 0.8
+  ) +
+  
+  scale_fill_manual(
+    values = cols,
+    labels = labels,
+    name = "Sample Legend"
+  ) +
+  
+  labs(
+    title = "Free Amino Acid Release",
+    x = "Amino Acid",
+    y = "Free Amino Acid Concentration (mg/g)"
+  ) +
+  
+  theme_bw(base_size = 16) +
+  
+  theme(
+    legend.position = "right",
+    legend.box = "vertical",
+    legend.margin = margin(t = 120),
+    
+    legend.title = element_text(
+      size = 13,
+      face = "bold"
+    ),
+    
+    legend.text = element_text(
+      size = 12
+    ),
+    
+    axis.text.x = element_text(
+      size = 12,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    axis.text.y = element_text(
+      size = 12,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    axis.title.x = element_text(
+      size = 16,
+      face = "bold"
+    ),
+    
+    axis.title.y = element_text(
+      size = 16,
+      face = "bold"
+    ),
+    
+    axis.line = element_line(
+      colour = "black",
+      linewidth = 1.2
+    ),
+    
+    axis.ticks = element_line(
+      colour = "black",
+      linewidth = 1.2
+    ),
+    
+    panel.grid.major.y = element_line(
+      colour = "grey90"
+    ),
+    
+    panel.grid.minor = element_blank()
+  )
+
+print(p_twoway)

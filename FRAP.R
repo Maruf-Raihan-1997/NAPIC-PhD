@@ -187,3 +187,46 @@ print(tukey)
 
 cat("\n=== SIGNIFICANCE STARS USED IN PLOT ===\n")
 print(comparisons[, c("comp", "p", "stars")])
+
+
+# ---------------------------------------------------------
+# ANOVA ASSUMPTION CHECKS
+# ---------------------------------------------------------
+
+# Residuals from ANOVA model
+res <- residuals(anova_result)
+
+# Shapiro-Wilk normality test
+shapiro.test(res)
+
+# Q-Q plot
+qqnorm(res)
+qqline(res, col = "red", lwd = 2)
+
+# Histogram of residuals
+hist(res,
+     main = "Residual Distribution",
+     xlab = "Residuals")
+
+# Homogeneity of variance
+library(car)
+
+leveneTest(FRAP ~ group, data = df)
+
+
+#Methods
+
+#Assumptions of normality and homogeneity of variance were assessed using the Shapiro-Wilk and Levene's tests, respectively. Differences among food matrices were evaluated by one-way ANOVA followed by Tukey's HSD post hoc test (p < 0.05).
+
+#Results (if reporting assumptions)
+
+#Residuals were normally distributed (Shapiro-Wilk: W = 0.92204, p = 0.3033), supporting the use of parametric analyses.
+#In your thesis, if an examiner asks why you checked residuals rather than raw values, the short answer is:
+
+#ANOVA assumes that model residuals are normally distributed within treatments. Therefore, normality was assessed using the residuals from the fitted ANOVA model rather than the pooled raw observations
+#ANOVA asks:
+
+#"Are the differences between groups larger than the random variation within groups?"
+
+#Therefore the distribution that matters is the distribution of the within-group random variation, i.e., the residuals.
+

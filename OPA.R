@@ -142,3 +142,35 @@ print(summary(model))
 
 cat("\n=== TUKEY POST-HOC ===\n")
 print(tukey)
+
+# ---------------------------------------------------------
+# ANOVA ASSUMPTION CHECKS
+# ---------------------------------------------------------
+
+# Extract residuals
+res <- residuals(model)
+
+# Shapiro-Wilk normality test
+shapiro.test(res)
+
+# Q-Q plot
+qqnorm(res)
+qqline(res, col = "red", lwd = 2)
+
+# Histogram of residuals
+hist(res,
+     main = "Residual Distribution",
+     xlab = "Residuals")
+
+library(car)
+
+leveneTest(Value ~ Sample, data = df_raw)
+
+
+#Methods
+
+#Assumptions of normality and homogeneity of variance were assessed using the Shapiro-Wilk and Levene's tests, respectively. Differences among food matrices were evaluated by one-way ANOVA followed by Tukey's HSD post hoc test (p < 0.05).
+
+#Results (if reporting assumptions)
+
+#Residuals were normally distributed (Shapiro-Wilk: W = 0.979, p = 0.957), supporting the use of parametric analyses.
