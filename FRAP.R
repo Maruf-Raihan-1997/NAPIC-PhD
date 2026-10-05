@@ -150,7 +150,7 @@ geom_text(
   ) +
   labs(
     title = "Antioxidant Capacity (FRAP assay)",
-    x = "Food Vehicle",
+    x = "Food Matrix",
     y = "FRAP (µmol TE/g dry weight)"
   )
 

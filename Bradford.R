@@ -80,7 +80,7 @@ p_bradford <- ggplot(df_plot, aes(x = Sample, y = Mean, fill = Sample)) +
   ) +
   labs(
     title = "Protein Concentration (Bradford Assay)",
-    x = "Food Vehicle",
+    x = "Food Matrix",
     y = "Protein Concentration (µg/mL)"
   ) 
 

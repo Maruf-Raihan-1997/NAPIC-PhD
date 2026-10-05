@@ -14,9 +14,9 @@ codes <- c("ND", "W", "Bn", "Br")
 
 labels <- c(
   ND = "Undigested DWP",
-  W = "10% DWP Water",
-  Bn = "10% DWP  Banana",
-  Br = "10% DWP  Bread"
+  W = "10% (w/v) DWP Water",
+  Bn = "10% (w/w) DWP  Banana",
+  Br = "10% (w/w) DWP  Bread"
 )
 
 cols <- c(
@@ -175,7 +175,6 @@ p_twoway <- ggplot(
   ) +
   
   labs(
-    title = "Free Amino Acid Release",
     x = "Free Amino Acid",
     y = "Free Amino Acid Concentration (mg/g)"
   ) +
@@ -237,36 +236,8 @@ p_twoway <- ggplot(
 
 print(p_twoway)
 
-# =====================================================================
-# EXPORT
-# =====================================================================
-
-ggsave(
-  "Free_Amino_Acid_TwoWay_ANOVA.png",
-  p_twoway,
-  width = 7,
-  height = 9,
-  dpi = 600,
-  bg = "white"
-)
-
-ggsave(
-  "Free_Amino_Acid_TwoWay_ANOVA.pdf",
-  p_twoway,
-  width = 7,
-  height = 9
-)
-
-if (requireNamespace("svglite", quietly = TRUE)) {
-  
-  ggsave(
-    "Free_Amino_Acid_TwoWay_ANOVA.svg",
-    p_twoway,
-    width = 7,
-    height = 9
-  )
-  
-}
+dev.new()
+print(p_interaction)
 
 # ---------------------------------------------------------------------
 # Interaction Plot with 95% CI
@@ -282,6 +253,10 @@ if (requireNamespace("svglite", quietly = TRUE)) {
 # Interaction Plot with Mean ± SD
 # ---------------------------------------------------------------------
 
+# ---------------------------------------------------------------------
+# Interaction Plot (Mean ± SD)
+# ---------------------------------------------------------------------
+
 interaction_summary <- dat %>%
   group_by(amino_acid, treatment) %>%
   summarise(
@@ -290,6 +265,14 @@ interaction_summary <- dat %>%
     sd = sd(conc),
     .groups = "drop"
   )
+
+# Wrapped labels for poster readability
+interaction_labels <- c(
+  ND = "Undigested\nDWP",
+  W = "10% (w/v)\nDWP Water",
+  Bn = "10% (w/w)\nDWP Banana",
+  Br = "10% (w/w)\nDWP Bread"
+)
 
 p_interaction <- ggplot(
   interaction_summary,
@@ -301,21 +284,21 @@ p_interaction <- ggplot(
   )
 ) +
   
-  geom_line(linewidth = 1.2) +
+  geom_line(linewidth = 1.8) +
   
-  geom_point(size = 4) +
+  geom_point(size = 5) +
   
   geom_errorbar(
     aes(
-      ymin = mean - sd,
+      ymin = pmax(mean - sd, 0),
       ymax = mean + sd
     ),
-    width = 0.12,
-    linewidth = 0.8
+    width = 0.08,
+    linewidth = 1
   ) +
   
   scale_x_discrete(
-    labels = labels
+    labels = interaction_labels
   ) +
   
   scale_colour_manual(
@@ -333,25 +316,40 @@ p_interaction <- ggplot(
     colour = "Amino Acid"
   ) +
   
-  theme_bw(base_size = 16) +
+  theme_classic(base_size = 18) +
   
   theme(
-    legend.position = "top",
+    legend.position = "right",
+    
     legend.title = element_text(
-      face = "bold"
+      face = "bold",
+      size = 13
+    ),
+    
+    legend.text = element_text(
+      size = 12
     ),
     
     axis.text.x = element_text(
-      angle = 15,
-      hjust = 1,
-      face = "bold"
+      size = 12,
+      face = "bold",
+      colour = "black",
+      lineheight = 0.9
+    ),
+    
+    axis.text.y = element_text(
+      size = 12,
+      face = "bold",
+      colour = "black"
     ),
     
     axis.title = element_text(
+      size = 14,
       face = "bold"
     ),
     
     plot.title = element_text(
+      size = 16,
       face = "bold",
       hjust = 0.5
     ),
@@ -360,8 +358,6 @@ p_interaction <- ggplot(
   )
 
 print(p_interaction)
-
-
 
 # ---------------------------------------------------------------------
 # Summary statistics
@@ -474,3 +470,4 @@ p_twoway <- ggplot(
   )
 
 print(p_twoway)
+

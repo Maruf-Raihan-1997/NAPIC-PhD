@@ -109,7 +109,7 @@ p_opa <- ggplot(df_stats2, aes(x = Sample, y = Mean, fill = Sample)) +
   ) +
   labs(
     title = "Apparent Protein Digestibility % (OPA assay)",
-    x = "Food Vehicle",
+    x = "Food Matrix",
     y = "Degree of protein hydrolysis (%)"
   )
 
@@ -131,7 +131,7 @@ p_opa <- p_opa +
 p_opa <- p_opa +
   annotate("segment", x = 1, xend = 3, y = 120, yend = 120, linewidth = 0.8) +
   annotate("text", x = 2, y = 125, label = star_WBr, size = 7)
-
+dev.new()
 print(p_opa)
 
 cat("\n=== DESCRIPTIVE STATS ===\n")

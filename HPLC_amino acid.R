@@ -158,16 +158,4 @@ p <- ggplot(plot_summ, aes(x = amino_acid, y = mean, fill = treatment)) +
 
 print(p)
 
-# ---------------------------------------------------------------------
-# 9. Export (300 dpi PNG, PDF; SVG if svglite is installed)
-# ---------------------------------------------------------------------
-ggsave("chart_stats_R.png", p, width = 11, height = 7, dpi = 300)
-ggsave("chart_stats_R.pdf", p, width = 11, height = 7)
-if (requireNamespace("svglite", quietly = TRUE)) {
-  ggsave("chart_stats_R.svg", p, width = 11, height = 7)
-}
 
-# Optional: save the statistics tables
-write_csv(anova_tbl, "anova_results.csv")
-write_csv(tukey_tbl, "tukey_results.csv")
-write_csv(plot_summ,  "summary_means_sd_letters.csv")

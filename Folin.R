@@ -151,7 +151,7 @@ geom_text(
   ) +
   labs(
     title = "Total Phenolic Content (Folin Assay)",
-    x = "Food Vehicle",
+    x = "Food Matrix",
     y = "TPC (mg GAE/g dry weight)"
   )
 
