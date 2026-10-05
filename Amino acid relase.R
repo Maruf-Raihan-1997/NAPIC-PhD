@@ -1,6 +1,11 @@
 # =====================================================================
 # Free amino acid release from Lemna minor duckweed after in vitro digestion
 # Statistics (TWO-way ANOVA + INTERACTION)
+#A two-factor ANOVA always tests:
+  
+ # Main effect of Factor A
+#Main effect of Factor B
+#A × B interaction
 # Conference Poster Version (Portrait)
 # =====================================================================
 
