@@ -476,3 +476,207 @@ p_twoway <- ggplot(
 
 print(p_twoway)
 
+
+# =====================================================================
+# POST-HOC TESTS (Tukey)
+# =====================================================================
+
+library(emmeans)
+library(multcomp)
+
+# Estimated marginal means
+emm <- emmeans(
+  fit2,
+  ~ treatment * amino_acid
+)
+
+# Compact letter display
+letters_df <- cld(
+  emm,
+  by = "amino_acid",
+  adjust = "tukey",
+  Letters = letters
+) %>%
+  as.data.frame()
+
+# Remove spaces from letters
+letters_df$.group <- gsub(" ", "", letters_df$.group)
+
+print(letters_df)
+
+# =====================================================================
+# SUMMARY STATISTICS FOR PLOT
+# =====================================================================
+
+plot2 <- dat %>%
+  group_by(amino_acid, treatment) %>%
+  summarise(
+    mean = mean(conc),
+    sd = sd(conc),
+    .groups = "drop"
+  ) %>%
+  left_join(
+    letters_df %>%
+      dplyr::select(
+        amino_acid,
+        treatment,
+        .group
+      ),
+    by = c(
+      "amino_acid",
+      "treatment"
+    )
+  )
+
+# =====================================================================
+# BAR PLOT WITH TUKEY LETTERS
+# =====================================================================
+
+dodge <- position_dodge(width = 0.8)
+
+p_twoway <- ggplot(
+  plot2,
+  aes(
+    x = amino_acid,
+    y = mean,
+    fill = treatment
+  )
+) +
+  
+  geom_col(
+    position = dodge,
+    width = 0.8,
+    colour = "white"
+  ) +
+  
+  geom_errorbar(
+    aes(
+      ymin = pmax(mean - sd, 0),
+      ymax = mean + sd
+    ),
+    position = dodge,
+    width = 0.25,
+    linewidth = 0.8
+  ) +
+  
+  geom_text(
+    aes(
+      label = .group,
+      y = mean + sd + 0.08
+    ),
+    position = dodge,
+    size = 5,
+    fontface = "bold",
+    colour = "black"
+  ) +
+  
+  scale_fill_manual(
+    values = cols,
+    labels = labels,
+    name = "Sample Legend"
+  ) +
+  
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  
+  labs(
+    title = "Free Amino Acid Release",
+    x = "Amino Acid",
+    y = "Free Amino Acid Concentration (mg/g)"
+  ) +
+  
+  theme_bw(base_size = 16) +
+  
+  theme(
+    legend.position = "right",
+    legend.box = "vertical",
+    
+    legend.title = element_text(
+      size = 13,
+      face = "bold"
+    ),
+    
+    legend.text = element_text(
+      size = 16
+    ),
+    
+    axis.text.x = element_text(
+      size = 12,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    axis.text.y = element_text(
+      size = 12,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    axis.title.x = element_text(
+      size = 16,
+      face = "bold"
+    ),
+    
+    axis.title.y = element_text(
+      size = 12,
+      face = "bold"
+    ),
+    
+    axis.line = element_line(
+      colour = "black",
+      linewidth = 1.2
+    ),
+    
+    axis.ticks = element_line(
+      colour = "black",
+      linewidth = 1.2
+    ),
+    
+    panel.grid.major.y = element_line(
+      colour = "grey90"
+    ),
+    
+    panel.grid.minor = element_blank()
+  )
+
+print(p_twoway)
+
+
+# legend position
+
+
+
+legend_plot <- ggplot(
+  plot2,
+  aes(x = amino_acid, y = mean, fill = treatment)
+) +
+  geom_col() +
+  scale_fill_manual(
+    values = cols,
+    labels = labels,
+    name = "Sample Legend"
+  ) +
+  theme_void() +
+  theme(
+    legend.position = "top",
+    legend.title = element_text(
+      size = 20,
+      face = "bold"
+    ),
+    legend.text = element_text(
+      size = 18
+    )
+  ) +
+  guides(
+    fill = guide_legend(
+      nrow = 2,
+      byrow = TRUE,
+      keywidth = unit(1.5, "cm"),
+      keyheight = unit(1.0, "cm")
+    )
+  )
+
+legend <- cowplot::get_legend(legend_plot)
+
+cowplot::ggdraw(legend)
