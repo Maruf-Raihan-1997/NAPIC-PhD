@@ -174,3 +174,291 @@ leveneTest(Value ~ Sample, data = df_raw)
 #Results (if reporting assumptions)
 
 #Residuals were normally distributed (Shapiro-Wilk: W = 0.979, p = 0.957), supporting the use of parametric analyses.
+
+
+#NAPIC2026
+
+# =====================================================================
+# OPA DATA ANALYSIS + PUBLICATION-QUALITY BAR PLOT
+# Author: Maruf Raihan (PhD, NICHE, Ulster)
+# =====================================================================
+
+library(ggplot2)
+library(emmeans)
+library(multcomp)
+library(multcompView)
+library(grid)
+
+# ---------------------------------------------------------
+# 1. RAW OPA DATA
+# ---------------------------------------------------------
+
+df_raw <- data.frame(
+  Sample = factor(
+    rep(
+      c(
+        "10%(w/v)\nDWP Water",
+        "10%(w/w)\nDWP Banana",
+        "10%(w/w)\nDWP Bread"
+      ),
+      each = 3
+    ),
+    levels = c(
+      "10%(w/v)\nDWP Water",
+      "10%(w/w)\nDWP Banana",
+      "10%(w/w)\nDWP Bread"
+    )
+  ),
+  
+  Value = c(
+    28.36, 24.83, 33.51,    # Water
+    32.78, 43.67, 50.13,    # Banana
+    76.13, 84.81, 81.92     # Bread
+  )
+)
+
+# ---------------------------------------------------------
+# 2. DESCRIPTIVE STATISTICS
+# ---------------------------------------------------------
+
+df_stats <- aggregate(
+  Value ~ Sample,
+  df_raw,
+  function(x) {
+    c(
+      Mean = mean(x),
+      SD   = sd(x),
+      CV   = sd(x) / mean(x) * 100
+    )
+  }
+)
+
+df_stats <- do.call(data.frame, df_stats)
+
+names(df_stats) <- c(
+  "Sample",
+  "Mean",
+  "SD",
+  "CV"
+)
+
+# ---------------------------------------------------------
+# 3. ANOVA + TUKEY
+# ---------------------------------------------------------
+
+model <- aov(Value ~ Sample, data = df_raw)
+
+emm <- emmeans(model, ~ Sample)
+
+tukey <- summary(
+  pairs(
+    emm,
+    adjust = "tukey"
+  )
+)
+
+# ---------------------------------------------------------
+# 4. TUKEY LETTERS
+# ---------------------------------------------------------
+
+cld_out <- suppressMessages(
+  cld(
+    emm,
+    Letters = letters,
+    adjust = "tukey"
+  )
+)
+
+letters_df <- as.data.frame(cld_out)
+
+df_stats2 <- merge(
+  df_stats,
+  letters_df[, c("Sample", ".group")],
+  by = "Sample"
+)
+
+# ---------------------------------------------------------
+# 5. P-VALUE → ASTERISK FUNCTION
+# ---------------------------------------------------------
+
+p_to_star <- function(p) {
+  
+  if (p < 0.0001) return("****")
+  if (p < 0.01) return("**")
+  if (p < 0.05) return("*")
+  
+  return("ns")
+}
+
+p_WB  <- tukey$p.value[1]
+p_WBr <- tukey$p.value[2]
+p_BBr <- tukey$p.value[3]
+
+star_WB  <- p_to_star(p_WB)
+star_WBr <- p_to_star(p_WBr)
+star_BBr <- p_to_star(p_BBr)
+
+# ---------------------------------------------------------
+# 6. BAR PLOT
+# ---------------------------------------------------------
+
+p_opa <- ggplot(
+  df_stats2,
+  aes(
+    x = Sample,
+    y = Mean,
+    fill = Sample
+  )
+) +
+  
+  geom_col(
+    width = 0.7,
+    colour = "white"
+  ) +
+  
+  geom_errorbar(
+    aes(
+      ymin = Mean - SD,
+      ymax = Mean + SD
+    ),
+    width = 0.2,
+    linewidth = 0.8
+  ) +
+  
+  geom_text(
+    aes(
+      y = Mean + SD + 5,
+      label = .group
+    ),
+    size = 15,
+    fontface = "bold"
+  ) +
+  
+  scale_fill_manual(
+    values = c(
+      "10%(w/v)\nDWP Water" = "steelblue",
+      "10%(w/w)\nDWP Banana" = "forestgreen",
+      "10%(w/w)\nDWP Bread" = "saddlebrown"
+    )
+  ) +
+  
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.12))
+  ) +
+  
+  labs(
+    title = "Apparent Protein Digestibility (%)",
+    x = "Food Matrix",
+    y = "Degree of Protein Hydrolysis (%)"
+  ) +
+  
+  theme_classic(base_size = 16) +
+  
+  theme(
+    
+    # Remove legend
+    legend.position = "none",
+    
+    # White background
+    panel.background = element_rect(
+      fill = "white",
+      colour = NA
+    ),
+    
+    plot.background = element_rect(
+      fill = "white",
+      colour = NA
+    ),
+    
+    # Centered title
+    plot.title = element_text(
+      size = 24,
+      face = "bold",
+      hjust = 0.5
+    ),
+    
+    # Axis text
+    axis.text.x = element_text(
+      size = 20,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    axis.text.y = element_text(
+      size = 25,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    # Axis titles
+    axis.title.x = element_text(
+      size = 25,
+      face = "bold"
+    ),
+    
+    axis.title.y = element_text(
+      size = 25,
+      face = "bold"
+    ),
+    
+    # Thick left and bottom axes only
+    axis.line = element_line(
+      colour = "black",
+      linewidth = 2
+    ),
+    
+    # Thick tick marks
+    axis.ticks = element_line(
+      colour = "black",
+      linewidth = 2
+    ),
+    
+    axis.ticks.length = unit(0.25, "cm"),
+    
+    # No grid
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+# ---------------------------------------------------------
+# 8. DISPLAY PLOT
+# ---------------------------------------------------------
+
+print(p_opa)
+
+# ---------------------------------------------------------
+# 9. OUTPUT STATISTICS
+# ---------------------------------------------------------
+
+cat("\n=== DESCRIPTIVE STATS ===\n")
+print(df_stats2)
+
+cat("\n=== ANOVA SUMMARY ===\n")
+print(summary(model))
+
+cat("\n=== TUKEY POST-HOC ===\n")
+print(tukey)
+
+# ---------------------------------------------------------
+# 10. ASSUMPTION CHECKS
+# ---------------------------------------------------------
+
+res <- residuals(model)
+
+shapiro.test(res)
+
+qqnorm(res)
+qqline(res, col = "red", lwd = 2)
+
+hist(
+  res,
+  main = "Residual Distribution",
+  xlab = "Residuals"
+)
+
+library(car)
+
+leveneTest(
+  Value ~ Sample,
+  data = df_raw
+)

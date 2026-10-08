@@ -146,3 +146,232 @@ leveneTest(Value ~ Sample, data = df_raw)
 #"Are the differences between groups larger than the random variation within groups?"
 
 #Therefore the distribution that matters is the distribution of the within-group random variation, i.e., the residuals.
+
+
+#NAPIC 2026
+
+# =====================================================================
+# BRADFORD DATA ANALYSIS + PUBLICATION-QUALITY BAR PLOT
+# Author: Maruf Raihan (PhD, NICHE, Ulster)
+# =====================================================================
+
+library(emmeans)
+library(multcomp)
+library(multcompView)
+library(ggplot2)
+library(grid)
+
+# ---------------------------------------------------------
+# 1. RAW DATA
+# ---------------------------------------------------------
+
+df <- data.frame(
+  Sample = factor(
+    rep(
+      c(
+        "10%(w/v)\nDWP Water",
+        "10%(w/w)\nDWP Banana",
+        "10%(w/w)\nDWP Bread"
+      ),
+      each = 3
+    ),
+    levels = c(
+      "10%(w/v)\nDWP Water",
+      "10%(w/w)\nDWP Banana",
+      "10%(w/w)\nDWP Bread"
+    )
+  ),
+  
+  Protein = c(
+    639.00, 472.04, 701.52,   # Water
+    400.72, 441.69, 447.00,   # Banana
+    448.05, 480.52, 450.14    # Bread
+  )
+)
+
+# ---------------------------------------------------------
+# 2. DESCRIPTIVE STATS
+# ---------------------------------------------------------
+
+df_stats <- aggregate(
+  Protein ~ Sample,
+  df,
+  function(x) {
+    c(
+      Mean = mean(x),
+      SD = sd(x),
+      CV = sd(x) / mean(x) * 100
+    )
+  }
+)
+
+df_stats <- do.call(data.frame, df_stats)
+
+names(df_stats) <- c(
+  "Sample",
+  "Mean",
+  "SD",
+  "CV"
+)
+
+# ---------------------------------------------------------
+# 3. ANOVA + TUKEY
+# ---------------------------------------------------------
+
+model <- aov(Protein ~ Sample, data = df)
+
+emm <- emmeans(model, ~ Sample)
+
+tukey <- summary(
+  pairs(
+    emm,
+    adjust = "tukey"
+  )
+)
+
+# ---------------------------------------------------------
+# 4. TUKEY LETTERS
+# ---------------------------------------------------------
+
+cld_out <- suppressMessages(
+  cld(
+    emm,
+    Letters = letters,
+    adjust = "tukey"
+  )
+)
+
+df_plot <- merge(
+  df_stats,
+  cld_out[, c("Sample", ".group")],
+  by = "Sample"
+)
+
+# ---------------------------------------------------------
+# 5. BAR PLOT
+# ---------------------------------------------------------
+
+p_bradford <- ggplot(
+  df_plot,
+  aes(
+    x = Sample,
+    y = Mean,
+    fill = Sample
+  )
+) +
+  
+  geom_col(
+    width = 0.7,
+    colour = "white"
+  ) +
+  
+  geom_errorbar(
+    aes(
+      ymin = Mean - SD,
+      ymax = Mean + SD
+    ),
+    width = 0.2,
+    linewidth = 0.8
+  ) +
+  
+  geom_text(
+    aes(
+      label = .group,
+      y = Mean + SD + 30
+    ),
+    size = 15,
+    fontface = "bold"
+  ) +
+  
+  scale_fill_manual(
+    values = c(
+      "10%(w/v)\nDWP Water" = "steelblue",
+      "10%(w/w)\nDWP Banana" = "forestgreen",
+      "10%(w/w)\nDWP Bread" = "saddlebrown"
+    )
+  ) +
+  
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.12))
+  ) +
+  
+  labs(
+    title = "Concentration of Undigested Protein Fractions (>3 kDa) [µg/mL]",
+    x = "Food Matrix",
+    y ="Protein Concentration (µg/mL)"
+  ) +
+  
+  theme_classic(base_size = 16) +
+  
+  theme(
+    
+    # Remove legend
+    legend.position = "none",
+    
+    # White background
+    panel.background = element_rect(
+      fill = "white",
+      colour = NA
+    ),
+    
+    plot.background = element_rect(
+      fill = "white",
+      colour = NA
+    ),
+    
+    # Center title
+    plot.title = element_text(
+      size = 20,
+      face = "bold",
+      hjust = 0.5
+    ),
+    
+    # Axis text
+    axis.text.x = element_text(
+      size = 20,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    axis.text.y = element_text(
+      size = 25,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    # Axis titles
+    axis.title.x = element_text(
+      size = 25,
+      face = "bold"
+    ),
+    
+    axis.title.y = element_text(
+      size = 25,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    # Thick bottom and left axes
+    axis.line = element_line(
+      colour = "black",
+      linewidth = 2
+    ),
+    
+    # Thick ticks
+    axis.ticks = element_line(
+      colour = "black",
+      linewidth = 2
+    ),
+    
+    axis.ticks.length = unit(0.25, "cm"),
+    
+    # No gridlines
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+# ---------------------------------------------------------
+# 6. PRINT PLOT
+# ---------------------------------------------------------
+
+print(p_bradford)

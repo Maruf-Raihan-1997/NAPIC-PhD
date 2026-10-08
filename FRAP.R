@@ -230,3 +230,280 @@ leveneTest(FRAP ~ group, data = df)
 
 #Therefore the distribution that matters is the distribution of the within-group random variation, i.e., the residuals.
 
+
+
+#NAPIC 2026
+
+# =====================================================================
+# FRAP DATA ANALYSIS + PUBLICATION-QUALITY BAR PLOT
+# Author: Maruf Raihan (PhD, NICHE, Ulster)
+# =====================================================================
+
+library(dplyr)
+library(ggplot2)
+library(multcompView)
+library(grid)
+library(car)
+
+# -----------------------------
+# Raw FRAP data
+# -----------------------------
+
+FRAP <- c(
+  33.80, 32.20, 24.80,      # Undigested DWP
+  68.80, 68.10, 70.20,      # Water
+  41.60, 45.30, 49.00,      # Banana
+  81.40, 65.61, 64.97       # Bread
+)
+
+group <- factor(
+  rep(
+    c(
+      "Undigested DWP",
+      "10%(w/v)\nDWP Water",
+      "10%(w/w)\nDWP Banana",
+      "10%(w/w)\nDWP Bread"
+    ),
+    each = 3
+  ),
+  levels = c(
+    "Undigested DWP",
+    "10%(w/v)\nDWP Water",
+    "10%(w/w)\nDWP Banana",
+    "10%(w/w)\nDWP Bread"
+  )
+)
+
+df <- data.frame(FRAP, group)
+
+# -----------------------------
+# ANOVA + Tukey
+# -----------------------------
+
+anova_result <- aov(FRAP ~ group, data = df)
+
+tukey <- TukeyHSD(anova_result)
+
+pvals <- tukey$group[, "p adj"]
+names(pvals) <- rownames(tukey$group)
+
+# -----------------------------
+# Tukey letters
+# -----------------------------
+
+letters <- multcompLetters(pvals)$Letters
+
+letters_df <- data.frame(
+  Sample = names(letters),
+  Letter = letters
+)
+
+# -----------------------------
+# Summary statistics
+# -----------------------------
+
+df_summary <- df %>%
+  group_by(group) %>%
+  summarise(
+    Mean = mean(FRAP),
+    SD = sd(FRAP),
+    .groups = "drop"
+  )
+
+df_summary$Sample <- factor(
+  df_summary$group,
+  levels = c(
+    "Undigested DWP",
+    "10%(w/v)\nDWP Water",
+    "10%(w/w)\nDWP Banana",
+    "10%(w/w)\nDWP Bread"
+  )
+)
+
+df_summary <- merge(
+  df_summary,
+  letters_df,
+  by.x = "Sample",
+  by.y = "Sample"
+)
+
+# -----------------------------
+# p-value to stars
+# -----------------------------
+
+p_to_star <- function(p) {
+  if (p < 0.0001) return("****")
+  if (p < 0.001) return("***")
+  if (p < 0.01) return("**")
+  if (p < 0.05) return("*")
+  return("ns")
+}
+
+# -----------------------------
+# Comparisons table
+# -----------------------------
+
+comparisons <- data.frame(
+  comp = names(pvals),
+  p = pvals,
+  stars = sapply(pvals, p_to_star)
+)
+
+comparisons <- comparisons %>%
+  mutate(
+    g1 = sub("-.*", "", comp),
+    g2 = sub(".*-", "", comp)
+  )
+
+# -----------------------------
+# Remove unwanted comparisons
+# -----------------------------
+
+remove_comps <- c(
+  "Undigested DWP-10%(w/w)\nDWP Banana",
+  "10%(w/w)\nDWP Banana-Undigested DWP",
+  
+  "10%(w/v)\nDWP Water-10%(w/w)\nDWP Bread",
+  "10%(w/w)\nDWP Bread-10%(w/v)\nDWP Water",
+  
+  "Undigested DWP-10%(w/w)\nDWP Bread",
+  "10%(w/w)\nDWP Bread-Undigested DWP"
+)
+
+comparisons <- comparisons %>%
+  filter(!(comp %in% remove_comps)) %>%
+  filter(stars != "ns")
+
+# -----------------------------
+# Bracket heights
+# -----------------------------
+
+max_y <- max(df_summary$Mean + df_summary$SD)
+
+comparisons$y <- seq(
+  max_y + 10,
+  max_y + 10 + 15 * (nrow(comparisons) - 1),
+  by = 15
+)
+
+# -----------------------------
+# Plot
+# -----------------------------
+
+p <- ggplot(
+  df_summary,
+  aes(
+    x = Sample,
+    y = Mean,
+    fill = Sample
+  )
+) +
+  
+  geom_col(
+    width = 0.7,
+    colour = "white"
+  ) +
+  
+  geom_errorbar(
+    aes(
+      ymin = Mean - SD,
+      ymax = Mean + SD
+    ),
+    width = 0.2,
+    linewidth = 0.8
+  ) +
+  
+  geom_text(
+    aes(
+      label = Letter,
+      y = Mean + SD + 5
+    ),
+    size = 15,
+    fontface = "bold"
+  ) +
+  
+  scale_fill_manual(
+    values = c(
+      "Undigested DWP" = "grey40",
+      "10%(w/v)\nDWP Water" = "steelblue",
+      "10%(w/w)\nDWP Banana" = "forestgreen",
+      "10%(w/w)\nDWP Bread" = "saddlebrown"
+    )
+  ) +
+  
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  
+  labs(
+    title = "Antioxidant Reducing Capacity (μmol TE/g dry Weight)",
+    x = "Food Matrix",
+    y = "FRAP (μmol TE/g dry Weight)"
+  ) +
+  
+  theme_classic(base_size = 16) +
+  
+  theme(
+    
+    legend.position = "none",
+    
+    panel.background = element_rect(
+      fill = "white",
+      colour = NA
+    ),
+    
+    plot.background = element_rect(
+      fill = "white",
+      colour = NA
+    ),
+    
+    plot.title = element_text(
+      size = 24,
+      face = "bold",
+      hjust = 0.5
+    ),
+    
+    axis.text.x = element_text(
+      size = 20,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    axis.text.y = element_text(
+      size = 25,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    axis.title.x = element_text(
+      size = 25,
+      face = "bold"
+    ),
+    
+    axis.title.y = element_text(
+      size = 25,
+      face = "bold"
+    ),
+    
+    axis.line = element_line(
+      colour = "black",
+      linewidth = 2
+    ),
+    
+    axis.ticks = element_line(
+      colour = "black",
+      linewidth = 2
+    ),
+    
+    axis.ticks.length = unit(0.25, "cm"),
+    
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+
+# -----------------------------
+# PRINT PLOT
+# -----------------------------
+
+print(p)

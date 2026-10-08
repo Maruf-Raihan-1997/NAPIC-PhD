@@ -315,8 +315,8 @@ p_interaction <- ggplot(
   ) +
   
   labs(
-    title = "Treatment × Amino Acid Interaction",
-    x = "Food Matrix",
+    title = "Food Matrix × Amino Acid Interaction",
+    x = "Treatment (Food Matrix )",
     y = "Free Amino Acid Concentration (mg/g)",
     colour = "Amino Acid"
   ) +
@@ -328,11 +328,11 @@ p_interaction <- ggplot(
     
     legend.title = element_text(
       face = "bold",
-      size = 13
+      size = 16
     ),
     
     legend.text = element_text(
-      size = 12
+      size = 13
     ),
     
     axis.text.x = element_text(
@@ -364,81 +364,112 @@ p_interaction <- ggplot(
 
 print(p_interaction)
 
+
 # ---------------------------------------------------------------------
-# Summary statistics
+# Interaction Plot (Mean ± SD)
+# Food Matrix × Amino Acid Interaction
+# Thick x- and y-axes, no top/right border
 # ---------------------------------------------------------------------
 
-plot2 <- dat %>%
+library(dplyr)
+library(ggplot2)
+library(grid)
+
+# Summary statistics
+interaction_summary <- dat %>%
   group_by(amino_acid, treatment) %>%
   summarise(
-    mean = mean(conc),
-    sd = sd(conc),
+    n = n(),
+    mean = mean(conc, na.rm = TRUE),
+    sd = sd(conc, na.rm = TRUE),
     .groups = "drop"
   )
 
-# ---------------------------------------------------------------------
+# Wrapped labels for poster readability
+interaction_labels <- c(
+  ND = "Undigested\nDWP",
+  W  = "10% (w/v)\nDWP Water",
+  Bn = "10% (w/w)\nDWP Banana",
+  Br = "10% (w/w)\nDWP Bread"
+)
+
 # Plot
-# ---------------------------------------------------------------------
-
-dodge <- position_dodge(width = 0.8)
-
-p_twoway <- ggplot(
-  plot2,
+p_interaction <- ggplot(
+  interaction_summary,
   aes(
-    x = amino_acid,
+    x = treatment,
     y = mean,
-    fill = treatment
+    colour = amino_acid,
+    group = amino_acid
   )
 ) +
   
-  geom_col(
-    position = dodge,
-    width = 0.8,
-    colour = "white"
-  ) +
+  geom_line(linewidth = 2.0) +
+  
+  geom_point(size = 5) +
   
   geom_errorbar(
     aes(
-      ymin = mean - sd,
+      ymin = pmax(mean - sd, 0),
       ymax = mean + sd
     ),
-    position = dodge,
-    width = 0.25,
-    linewidth = 0.8
+    width = 0.08,
+    linewidth = 1.2
   ) +
   
-  scale_fill_manual(
-    values = cols,
-    labels = labels,
-    name = "Sample Legend"
+  scale_x_discrete(
+    labels = interaction_labels
+  ) +
+  
+  scale_colour_manual(
+    values = c(
+      "Glutamic acid" = "#D55E00",
+      "Aspartic acid" = "#0072B2",
+      "Leucine"       = "#009E73"
+    )
   ) +
   
   labs(
-    title = "Free Amino Acid Release",
-    x = "Amino Acid",
-    y = "Free Amino Acid Concentration (mg/g)"
+    title = "Food Matrix × Amino Acid Interaction",
+    x = "Treatment (Food Matrix)",
+    y = "Free Amino Acid Concentration (mg/g)",
+    colour = "Amino Acid"
   ) +
   
-  theme_bw(base_size = 16) +
+  theme_classic(base_size = 18) +
   
   theme(
+    
+    # Thick x and y axes only
+    axis.line = element_line(
+      colour = "black",
+      linewidth = 2
+    ),
+    
+    # Thick ticks
+    axis.ticks = element_line(
+      colour = "black",
+      linewidth = 2
+    ),
+    
+    axis.ticks.length = unit(0.25, "cm"),
+    
     legend.position = "right",
-    legend.box = "vertical",
-    legend.margin = margin(t = 120),
     
     legend.title = element_text(
-      size = 13,
-      face = "bold"
+      face = "bold",
+      size = 16
     ),
     
     legend.text = element_text(
-      size = 12
+      size = 13
     ),
     
     axis.text.x = element_text(
       size = 12,
       face = "bold",
-      colour = "black"
+      colour = "black",
+      lineheight = 0.9
     ),
     
     axis.text.y = element_text(
@@ -447,34 +478,22 @@ p_twoway <- ggplot(
       colour = "black"
     ),
     
-    axis.title.x = element_text(
-      size = 16,
+    axis.title = element_text(
+      size = 14,
       face = "bold"
     ),
     
-    axis.title.y = element_text(
-      size = 16,
-      face = "bold"
+    plot.title = element_text(
+      size = 22,
+      face = "bold",
+      hjust = 0.5
     ),
     
-    axis.line = element_line(
-      colour = "black",
-      linewidth = 1.2
-    ),
-    
-    axis.ticks = element_line(
-      colour = "black",
-      linewidth = 1.2
-    ),
-    
-    panel.grid.major.y = element_line(
-      colour = "grey90"
-    ),
-    
+    panel.grid.major = element_blank(),
     panel.grid.minor = element_blank()
   )
 
-print(p_twoway)
+print(p_interaction)
 
 
 # =====================================================================
@@ -532,6 +551,9 @@ plot2 <- dat %>%
 # BAR PLOT WITH TUKEY LETTERS
 # =====================================================================
 
+library(ggplot2)
+library(grid)
+
 dodge <- position_dodge(width = 0.8)
 
 p_twoway <- ggplot(
@@ -581,26 +603,26 @@ p_twoway <- ggplot(
   ) +
   
   labs(
-    title = "Free Amino Acid Release",
+    title = "Free Amino Acid Release (mg/g)",
     x = "Amino Acid",
     y = "Free Amino Acid Concentration (mg/g)"
   ) +
   
-  theme_bw(base_size = 16) +
+  theme_classic(base_size = 16) +
   
   theme(
-    legend.position = "right",
-    legend.box = "vertical",
     
-    legend.title = element_text(
-      size = 13,
-      face = "bold"
+    # Remove legend
+    legend.position = "none",
+    
+    # Center title
+    plot.title = element_text(
+      size = 24,
+      face = "bold",
+      hjust = 0.5
     ),
     
-    legend.text = element_text(
-      size = 16
-    ),
-    
+    # Axis text
     axis.text.x = element_text(
       size = 12,
       face = "bold",
@@ -613,35 +635,37 @@ p_twoway <- ggplot(
       colour = "black"
     ),
     
+    # Axis titles
     axis.title.x = element_text(
       size = 16,
       face = "bold"
     ),
     
     axis.title.y = element_text(
-      size = 12,
+      size = 16,
       face = "bold"
     ),
     
+    # Thick bottom and left axes only
     axis.line = element_line(
       colour = "black",
-      linewidth = 1.2
+      linewidth = 2
     ),
     
+    # Thick tick marks
     axis.ticks = element_line(
       colour = "black",
-      linewidth = 1.2
+      linewidth = 2
     ),
     
-    panel.grid.major.y = element_line(
-      colour = "grey90"
-    ),
+    axis.ticks.length = unit(0.25, "cm"),
     
+    # No top/right border, no grid
+    panel.grid.major = element_blank(),
     panel.grid.minor = element_blank()
   )
 
 print(p_twoway)
-
 
 # legend position
 

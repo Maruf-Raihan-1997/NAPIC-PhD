@@ -231,3 +231,355 @@ leveneTest(TPC ~ group, data = df)
 
 #Therefore the distribution that matters is the distribution of the within-group random variation, i.e., the residuals.
 
+
+
+#NAPIC 2026
+
+# =====================================================================
+# FOLIN DATA ANALYSIS + PUBLICATION-QUALITY BAR PLOT
+# Author: Maruf Raihan (PhD, NICHE, Ulster)
+# =====================================================================
+
+library(dplyr)
+library(ggplot2)
+library(multcompView)
+library(grid)
+library(car)
+
+# -----------------------------
+# 1. RAW DATA
+# -----------------------------
+
+TPC <- c(
+  22.1, 21.0, 23.1,         # Undigested DWP
+  80.0, 65.4, 64.1,         # Water
+  52.4, 55.1, 53.2,         # Banana
+  105.13, 89.83, 94.30      # Bread
+)
+
+group <- factor(
+  rep(
+    c(
+      "Undigested DWP",
+      "10%(w/v)\nDWP Water",
+      "10%(w/w)\nDWP Banana",
+      "10%(w/w)\nDWP Bread"
+    ),
+    each = 3
+  ),
+  levels = c(
+    "Undigested DWP",
+    "10%(w/v)\nDWP Water",
+    "10%(w/w)\nDWP Banana",
+    "10%(w/w)\nDWP Bread"
+  )
+)
+
+df <- data.frame(TPC, group)
+
+# -----------------------------
+# 2. ANOVA + TUKEY
+# -----------------------------
+
+anova_result <- aov(TPC ~ group, data = df)
+
+tukey <- TukeyHSD(anova_result)
+
+# Extract p-values
+pvals <- tukey$group[, "p adj"]
+names(pvals) <- rownames(tukey$group)
+
+# -----------------------------
+# 3. TUKEY LETTERS
+# -----------------------------
+
+letters <- multcompLetters(pvals)$Letters
+
+letters_df <- data.frame(
+  Sample = names(letters),
+  Letter = letters
+)
+
+# -----------------------------
+# 4. SUMMARY TABLE
+# -----------------------------
+
+df_summary <- df %>%
+  group_by(group) %>%
+  summarise(
+    Mean = mean(TPC),
+    SD = sd(TPC),
+    .groups = "drop"
+  )
+
+df_summary$Sample <- factor(
+  df_summary$group,
+  levels = c(
+    "Undigested DWP",
+    "10%(w/v)\nDWP Water",
+    "10%(w/w)\nDWP Banana",
+    "10%(w/w)\nDWP Bread"
+  )
+)
+
+df_summary <- merge(
+  df_summary,
+  letters_df,
+  by.x = "Sample",
+  by.y = "Sample"
+)
+
+# -----------------------------
+# 5. FUNCTION: P-VALUE TO STARS
+# -----------------------------
+
+p_to_star <- function(p) {
+  
+  if (p < 0.0001) return("****")
+  if (p < 0.001) return("***")
+  if (p < 0.01) return("**")
+  if (p < 0.05) return("*")
+  
+  return("ns")
+}
+
+# -----------------------------
+# 6. BUILD COMPARISON TABLE
+# -----------------------------
+
+comparisons <- data.frame(
+  comp = names(pvals),
+  p = pvals,
+  stars = sapply(pvals, p_to_star)
+)
+
+comparisons <- comparisons %>%
+  mutate(
+    g1 = sub("-.*", "", comp),
+    g2 = sub(".*-", "", comp)
+  )
+
+# -----------------------------
+# REMOVE COMPARISONS
+# -----------------------------
+
+remove_comps <- c(
+  "Undigested DWP-10%(w/w)\nDWP Banana",
+  "10%(w/w)\nDWP Banana-Undigested DWP",
+  
+  "10%(w/v)\nDWP Water-10%(w/w)\nDWP Bread",
+  "10%(w/w)\nDWP Bread-10%(w/v)\nDWP Water",
+  
+  "Undigested DWP-10%(w/w)\nDWP Bread",
+  "10%(w/w)\nDWP Bread-Undigested DWP"
+)
+
+comparisons <- comparisons %>%
+  filter(!(comp %in% remove_comps))
+
+# Optional: remove all non-significant comparisons
+comparisons <- comparisons %>%
+  filter(stars != "ns")
+
+# -----------------------------
+# BRACKET HEIGHTS
+# -----------------------------
+
+max_y <- max(df_summary$Mean + df_summary$SD)
+
+comparisons$y <- seq(
+  max_y + 10,
+  max_y + 10 + 15 * (nrow(comparisons) - 1),
+  by = 15
+)
+
+# -----------------------------
+# 7. PUBLICATION-QUALITY PLOT
+# -----------------------------
+
+p <- ggplot(
+  df_summary,
+  aes(
+    x = Sample,
+    y = Mean,
+    fill = Sample
+  )
+) +
+  
+  geom_col(
+    width = 0.7,
+    colour = "white"
+  ) +
+  
+  geom_errorbar(
+    aes(
+      ymin = Mean - SD,
+      ymax = Mean + SD
+    ),
+    width = 0.2,
+    linewidth = 0.8
+  ) +
+  
+  geom_text(
+    aes(
+      label = Letter,
+      y = Mean + SD + 5
+    ),
+    size = 5,
+    fontface = "bold"
+  ) +
+  
+  scale_fill_manual(
+    values = c(
+      "Undigested DWP" = "grey40",
+      "10%(w/v)\nDWP Water" = "steelblue",
+      "10%(w/w)\nDWP Banana" = "forestgreen",
+      "10%(w/w)\nDWP Bread" = "saddlebrown"
+    )
+  ) +
+  
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  
+  labs(
+    title = "Phenolic Bioaccessibility (mg GAE/g dry weight)",
+    x = "Food Matrix",
+    y = "TPC (mg GAE/g Dry Weight)"
+  ) +
+  
+  theme_classic(base_size = 16) +
+  
+  theme(
+    
+    legend.position = "none",
+    
+    panel.background = element_rect(
+      fill = "white",
+      colour = NA
+    ),
+    
+    plot.background = element_rect(
+      fill = "white",
+      colour = NA
+    ),
+    
+    plot.title = element_text(
+      size = 24,
+      face = "bold",
+      hjust = 0.5
+    ),
+    
+    axis.text.x = element_text(
+      size = 12,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    axis.text.y = element_text(
+      size = 12,
+      face = "bold",
+      colour = "black"
+    ),
+    
+    axis.title.x = element_text(
+      size = 16,
+      face = "bold"
+    ),
+    
+    axis.title.y = element_text(
+      size = 16,
+      face = "bold"
+    ),
+    
+    axis.line = element_line(
+      colour = "black",
+      linewidth = 2
+    ),
+    
+    axis.ticks = element_line(
+      colour = "black",
+      linewidth = 2
+    ),
+    
+    axis.ticks.length = unit(0.25, "cm"),
+    
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+# -----------------------------
+# 8. ADD BRACKETS + STARS
+# -----------------------------
+
+for (i in 1:nrow(comparisons)) {
+  
+  g1 <- comparisons$g1[i]
+  g2 <- comparisons$g2[i]
+  y <- comparisons$y[i]
+  stars <- comparisons$stars[i]
+  
+  x1 <- which(levels(df_summary$Sample) == g1)
+  x2 <- which(levels(df_summary$Sample) == g2)
+  
+  p <- p +
+    annotate(
+      "segment",
+      x = x1,
+      xend = x2,
+      y = y,
+      yend = y,
+      linewidth = 1.2
+    ) +
+    annotate(
+      "text",
+      x = (x1 + x2) / 2,
+      y = y + 3,
+      label = stars,
+      size = 7
+    )
+}
+
+# -----------------------------
+# 9. PRINT PLOT
+# -----------------------------
+
+print(p)
+
+# -----------------------------
+# 10. STATISTICAL OUTPUT
+# -----------------------------
+
+cat("\n=== DESCRIPTIVE STATS + TUKEY LETTERS ===\n")
+print(df_summary)
+
+cat("\n=== ANOVA SUMMARY ===\n")
+print(summary(anova_result))
+
+cat("\n=== TUKEY POST-HOC ===\n")
+print(tukey)
+
+cat("\n=== SIGNIFICANCE STARS USED IN PLOT ===\n")
+print(comparisons[, c("comp", "p", "stars")])
+
+# -----------------------------
+# 11. ASSUMPTION CHECKS
+# -----------------------------
+
+res <- residuals(anova_result)
+
+shapiro.test(res)
+
+qqnorm(res)
+qqline(res, col = "red", lwd = 2)
+
+hist(
+  res,
+  main = "Residual Distribution",
+  xlab = "Residuals"
+)
+
+leveneTest(
+  TPC ~ group,
+  data = df
+)
