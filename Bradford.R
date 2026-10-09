@@ -321,7 +321,7 @@ p_bradford <- ggplot(
     
     # Center title
     plot.title = element_text(
-      size = 20,
+      size = 25,
       face = "bold",
       hjust = 0.5
     ),
@@ -342,25 +342,27 @@ p_bradford <- ggplot(
     # Axis titles
     axis.title.x = element_text(
       size = 25,
-      face = "bold"
+      face = "bold",
+      margin = margin(t = 20) 
     ),
     
     axis.title.y = element_text(
       size = 25,
       face = "bold",
-      colour = "black"
+      colour = "black",
+      margin = margin(r = 20)
     ),
     
     # Thick bottom and left axes
     axis.line = element_line(
       colour = "black",
-      linewidth = 2
+      linewidth = 2.5
     ),
     
     # Thick ticks
     axis.ticks = element_line(
       colour = "black",
-      linewidth = 2
+      linewidth = 2.5
     ),
     
     axis.ticks.length = unit(0.25, "cm"),

@@ -418,7 +418,7 @@ p <- ggplot(
       label = Letter,
       y = Mean + SD + 5
     ),
-    size = 15,
+    size = 10,
     fontface = "bold"
   ) +
   
@@ -436,9 +436,9 @@ p <- ggplot(
   ) +
   
   labs(
-    title = "Antioxidant Reducing Capacity (μmol TE/g dry Weight)",
+    title = "Antioxidant Reducing Capacity (μmol TE/g dry weight)",
     x = "Food Matrix",
-    y = "FRAP (μmol TE/g dry Weight)"
+    y = "FRAP (μmol TE/g dry weight)"
   ) +
   
   theme_classic(base_size = 16) +
@@ -466,6 +466,7 @@ p <- ggplot(
     axis.text.x = element_text(
       size = 20,
       face = "bold",
+      margin = margin(b = 5),
       colour = "black"
     ),
     
@@ -477,22 +478,24 @@ p <- ggplot(
     
     axis.title.x = element_text(
       size = 25,
-      face = "bold"
+      face = "bold",
+      margin = margin(t = 20)
     ),
     
     axis.title.y = element_text(
       size = 25,
-      face = "bold"
+      face = "bold",
+      margin = margin(r = 20)
     ),
     
     axis.line = element_line(
       colour = "black",
-      linewidth = 2
+      linewidth = 2.5
     ),
     
     axis.ticks = element_line(
       colour = "black",
-      linewidth = 2
+      linewidth = 2.5
     ),
     
     axis.ticks.length = unit(0.25, "cm"),

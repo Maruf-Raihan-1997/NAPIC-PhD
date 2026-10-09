@@ -549,12 +549,10 @@ plot2 <- dat %>%
 
 # =====================================================================
 # BAR PLOT WITH TUKEY LETTERS
+# THESIS STANDARD FORMAT
 # =====================================================================
 
-library(ggplot2)
-library(grid)
-
-dodge <- position_dodge(width = 0.8)
+dodge <- position_dodge(width = 0.7)
 
 p_twoway <- ggplot(
   plot2,
@@ -567,7 +565,7 @@ p_twoway <- ggplot(
   
   geom_col(
     position = dodge,
-    width = 0.8,
+    width = 0.7,
     colour = "white"
   ) +
   
@@ -577,33 +575,38 @@ p_twoway <- ggplot(
       ymax = mean + sd
     ),
     position = dodge,
-    width = 0.25,
+    width = 0.2,
     linewidth = 0.8
   ) +
   
   geom_text(
     aes(
       label = .group,
-      y = mean + sd + 0.08
+      y = mean + sd + 0.10
     ),
     position = dodge,
-    size = 5,
+    size = 8,
     fontface = "bold",
     colour = "black"
   ) +
   
   scale_fill_manual(
-    values = cols,
+    values = c(
+      ND = "grey40",
+      W  = "steelblue",
+      Bn = "forestgreen",
+      Br = "saddlebrown"
+    ),
     labels = labels,
-    name = "Sample Legend"
+    name = NULL
   ) +
   
   scale_y_continuous(
-    expand = expansion(mult = c(0, 0.15))
+    expand = expansion(mult = c(0, 0.20))
   ) +
   
   labs(
-    title = "Free Amino Acid Release (mg/g)",
+    title = "Free Amino Acid Release",
     x = "Amino Acid",
     y = "Free Amino Acid Concentration (mg/g)"
   ) +
@@ -612,55 +615,63 @@ p_twoway <- ggplot(
   
   theme(
     
-    # Remove legend
     legend.position = "none",
     
-    # Center title
+    panel.background = element_rect(
+      fill = "white",
+      colour = NA
+    ),
+    
+    plot.background = element_rect(
+      fill = "white",
+      colour = NA
+    ),
+    
     plot.title = element_text(
       size = 24,
       face = "bold",
       hjust = 0.5
     ),
     
-    # Axis text
     axis.text.x = element_text(
-      size = 12,
+      size = 20,
       face = "bold",
+      margin = margin(b = 5),
       colour = "black"
     ),
     
     axis.text.y = element_text(
-      size = 12,
+      size = 25,
       face = "bold",
       colour = "black"
     ),
     
-    # Axis titles
     axis.title.x = element_text(
-      size = 16,
-      face = "bold"
+      size = 25,
+      face = "bold",
+      margin = margin(t = 20)
     ),
     
     axis.title.y = element_text(
-      size = 16,
+      size = 25,
       face = "bold"
     ),
     
-    # Thick bottom and left axes only
     axis.line = element_line(
       colour = "black",
       linewidth = 2
     ),
     
-    # Thick tick marks
     axis.ticks = element_line(
       colour = "black",
       linewidth = 2
     ),
     
-    axis.ticks.length = unit(0.25, "cm"),
+    axis.ticks.length = unit(
+      0.25,
+      "cm"
+    ),
     
-    # No top/right border, no grid
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank()
   )
@@ -694,7 +705,7 @@ legend_plot <- ggplot(
   ) +
   guides(
     fill = guide_legend(
-      nrow = 2,
+      nrow = 1,          # one row
       byrow = TRUE,
       keywidth = unit(1.5, "cm"),
       keyheight = unit(1.0, "cm")

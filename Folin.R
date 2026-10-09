@@ -235,6 +235,8 @@ leveneTest(TPC ~ group, data = df)
 
 #NAPIC 2026
 
+#NAPIC 2026
+
 # =====================================================================
 # FOLIN DATA ANALYSIS + PUBLICATION-QUALITY BAR PLOT
 # Author: Maruf Raihan (PhD, NICHE, Ulster)
@@ -329,69 +331,6 @@ df_summary <- merge(
   by.y = "Sample"
 )
 
-# -----------------------------
-# 5. FUNCTION: P-VALUE TO STARS
-# -----------------------------
-
-p_to_star <- function(p) {
-  
-  if (p < 0.0001) return("****")
-  if (p < 0.001) return("***")
-  if (p < 0.01) return("**")
-  if (p < 0.05) return("*")
-  
-  return("ns")
-}
-
-# -----------------------------
-# 6. BUILD COMPARISON TABLE
-# -----------------------------
-
-comparisons <- data.frame(
-  comp = names(pvals),
-  p = pvals,
-  stars = sapply(pvals, p_to_star)
-)
-
-comparisons <- comparisons %>%
-  mutate(
-    g1 = sub("-.*", "", comp),
-    g2 = sub(".*-", "", comp)
-  )
-
-# -----------------------------
-# REMOVE COMPARISONS
-# -----------------------------
-
-remove_comps <- c(
-  "Undigested DWP-10%(w/w)\nDWP Banana",
-  "10%(w/w)\nDWP Banana-Undigested DWP",
-  
-  "10%(w/v)\nDWP Water-10%(w/w)\nDWP Bread",
-  "10%(w/w)\nDWP Bread-10%(w/v)\nDWP Water",
-  
-  "Undigested DWP-10%(w/w)\nDWP Bread",
-  "10%(w/w)\nDWP Bread-Undigested DWP"
-)
-
-comparisons <- comparisons %>%
-  filter(!(comp %in% remove_comps))
-
-# Optional: remove all non-significant comparisons
-comparisons <- comparisons %>%
-  filter(stars != "ns")
-
-# -----------------------------
-# BRACKET HEIGHTS
-# -----------------------------
-
-max_y <- max(df_summary$Mean + df_summary$SD)
-
-comparisons$y <- seq(
-  max_y + 10,
-  max_y + 10 + 15 * (nrow(comparisons) - 1),
-  by = 15
-)
 
 # -----------------------------
 # 7. PUBLICATION-QUALITY PLOT
@@ -425,7 +364,7 @@ p <- ggplot(
       label = Letter,
       y = Mean + SD + 5
     ),
-    size = 5,
+    size = 10,
     fontface = "bold"
   ) +
   
@@ -445,7 +384,7 @@ p <- ggplot(
   labs(
     title = "Phenolic Bioaccessibility (mg GAE/g dry weight)",
     x = "Food Matrix",
-    y = "TPC (mg GAE/g Dry Weight)"
+    y = "TPC (mg GAE/g dry weight)"
   ) +
   
   theme_classic(base_size = 16) +
@@ -471,35 +410,38 @@ p <- ggplot(
     ),
     
     axis.text.x = element_text(
-      size = 12,
+      size = 20,
       face = "bold",
+      margin = margin(b = 5),
       colour = "black"
     ),
     
     axis.text.y = element_text(
-      size = 12,
+      size = 25,
       face = "bold",
       colour = "black"
     ),
     
     axis.title.x = element_text(
-      size = 16,
-      face = "bold"
+      size = 25,
+      face = "bold",
+      margin = margin(t = 20)
     ),
     
     axis.title.y = element_text(
-      size = 16,
-      face = "bold"
+      size = 25,
+      face = "bold",
+      margin = margin(r = 20)
     ),
     
     axis.line = element_line(
       colour = "black",
-      linewidth = 2
+      linewidth = 2.5
     ),
     
     axis.ticks = element_line(
       colour = "black",
-      linewidth = 2
+      linewidth = 2.5
     ),
     
     axis.ticks.length = unit(0.25, "cm"),
@@ -507,38 +449,6 @@ p <- ggplot(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank()
   )
-
-# -----------------------------
-# 8. ADD BRACKETS + STARS
-# -----------------------------
-
-for (i in 1:nrow(comparisons)) {
-  
-  g1 <- comparisons$g1[i]
-  g2 <- comparisons$g2[i]
-  y <- comparisons$y[i]
-  stars <- comparisons$stars[i]
-  
-  x1 <- which(levels(df_summary$Sample) == g1)
-  x2 <- which(levels(df_summary$Sample) == g2)
-  
-  p <- p +
-    annotate(
-      "segment",
-      x = x1,
-      xend = x2,
-      y = y,
-      yend = y,
-      linewidth = 1.2
-    ) +
-    annotate(
-      "text",
-      x = (x1 + x2) / 2,
-      y = y + 3,
-      label = stars,
-      size = 7
-    )
-}
 
 # -----------------------------
 # 9. PRINT PLOT
